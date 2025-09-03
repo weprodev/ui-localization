@@ -1,23 +1,37 @@
-# @weprodev/localization
+# WPD Package Localization
 
-A comprehensive localization package for React Native applications using i18next and react-i18next.
+A powerful and flexible localization package for React and React Native applications.
 
 ## Features
 
-- Generic language store interface for flexible storage implementations
-- Default in-memory language store
-- Custom language detector plugin
-- TypeScript support with strict typing
-- React Native compatible
-- Configurable fallback language
-- Language change event handling
+- Type-safe translations with TypeScript
+- Support for nested translation structures
+- React hooks for easy integration
+- Support for string interpolation
+- Language detection and switching
+- Custom language storage
 
 ## Installation
 
 ```bash
-npm install @weprodev/localization
+npm install @weprodev/wpd-pkg-localization i18next react-i18next
 # or
-yarn add @weprodev/localization
+yarn add @weprodev/wpd-pkg-localization i18next react-i18next
+```
+
+### GitHub Packages Installation
+
+To install from GitHub Packages, add the following to your `.npmrc` file:
+
+```
+@weprodev:registry=https://npm.pkg.github.com/
+//npm.pkg.github.com/:_authToken=${YOUR_GITHUB_TOKEN}
+```
+
+Then install the package:
+
+```bash
+npm install @weprodev/wpd-pkg-localization
 ```
 
 ## Usage
@@ -25,153 +39,140 @@ yarn add @weprodev/localization
 ### Basic Setup
 
 ```typescript
-import { createI18n, I18nConfig } from '@weprodev/localization';
+import { initI18n, useTranslate } from '@weprodev/wpd-pkg-localization';
 
+// Define your translation structure
+type Translations = {
+  hello: string;
+  welcome: string;
+  nested: {
+    greeting: string;
+    farewell: string;
+  };
+};
+
+// Define your translations
 const resources = {
   en: {
     translation: {
-      welcome: 'Welcome',
-      goodbye: 'Goodbye'
-    }
+      hello: 'Hello',
+      welcome: 'Welcome {{name}}',
+      nested: {
+        greeting: 'Good morning',
+        farewell: 'Goodbye',
+      },
+    },
   },
-  fa: {
+  fr: {
     translation: {
-      welcome: 'خوش آمدید',
-      goodbye: 'خداحافظ'
-    }
+      hello: 'Bonjour',
+      welcome: 'Bienvenue {{name}}',
+      nested: {
+        greeting: 'Bonjour',
+        farewell: 'Au revoir',
+      },
+    },
   },
-  ku: {
-    translation: {
-      welcome: 'بەخێربێن',
-      goodbye: 'خوا حافیز'
-    }
-  }
 };
 
-const config: I18nConfig = {
+// Initialize i18n
+initI18n({
   resources,
   fallbackLng: 'en',
-  onLanguageChange: (language) => {
-    console.log('Language changed to:', language);
-  }
-};
-
-createI18n(config).then(() => {
-  console.log('i18n initialized');
 });
+
+// In your component
+function MyComponent() {
+  // Create the translation structure
+  const translationStructure = {
+    hello: '',
+    welcome: '',
+    nested: {
+      greeting: '',
+      farewell: '',
+    },
+  };
+
+  // Use the hook with your translation structure
+  const t = useTranslate<Translations>(translationStructure);
+
+  return (
+    <div>
+      <h1>{t.hello}</h1>
+      <p>{t.nested.greeting}</p>
+    </div>
+  );
+}
 ```
 
-### Custom Language Store
+### Using Interpolation
 
 ```typescript
-import { LanguageStore, createI18n } from '@weprodev/localization';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslateWithInterpolation } from '@weprodev/wpd-pkg-localization';
 
-class AsyncStorageLanguageStore implements LanguageStore {
-  private static readonly LANGUAGE_KEY = 'user_language';
-  private currentLanguage: string = 'en';
+function MyComponent() {
+  const welcomeMessage = useTranslateWithInterpolation('welcome', { name: 'John' });
+  
+  return <div>{welcomeMessage}</div>;
+}
+```
 
-  async getLanguage(): Promise<string> {
-    try {
-      const language = await AsyncStorage.getItem(AsyncStorageLanguageStore.LANGUAGE_KEY);
-      return language || 'en';
-    } catch {
-      return 'en';
-    }
+### Using Custom Language Store
+
+```typescript
+import { initI18n, LanguageStore } from '@weprodev/wpd-pkg-localization';
+
+// Create a custom language store for persistent storage
+class MyCustomLanguageStore implements LanguageStore {
+  getLanguage(): string | null {
+    return localStorage.getItem('app-language');
   }
 
-  async setLanguage(language: string): Promise<void> {
-    this.currentLanguage = language;
-    try {
-      await AsyncStorage.setItem(AsyncStorageLanguageStore.LANGUAGE_KEY, language);
-    } catch (error) {
-      console.error('Failed to save language:', error);
-    }
+  setLanguage(language: string): void {
+    localStorage.setItem('app-language', language);
   }
 }
 
-const customStore = new AsyncStorageLanguageStore();
-const config: I18nConfig = {
-  resources,
-  languageStore: customStore,
-  fallbackLng: 'en'
-};
+// Initialize with custom store
+initI18n({
+  resources: { /* your translations */ },
+  languageStore: new MyCustomLanguageStore(),
+});
 ```
 
-### Utility Functions
+### Changing Language
 
 ```typescript
-import { 
-  getCurrentLanguage, 
-  changeLanguage, 
-  getAvailableLanguages 
-} from '@weprodev/localization';
+import { changeLanguage, getCurrentLanguage } from '@weprodev/wpd-pkg-localization';
 
 // Get current language
 const currentLang = getCurrentLanguage();
 
 // Change language
-await changeLanguage('fa');
-
-// Get available languages
-const availableLanguages = getAvailableLanguages();
+const switchLanguage = async () => {
+  await changeLanguage('fr');
+};
 ```
 
 ## API Reference
 
-### Interfaces
+### Hooks
 
-#### `LanguageStore`
-Generic interface for language storage implementations.
+- `useTranslate<T>(translationStructure)` - Creates a type-safe translation object
+- `useTranslateWithInterpolation(key, variables, components)` - For translations with variable interpolation
+- `useTranslationInjection(key, variables)` - Direct access to i18next's t function
 
-```typescript
-interface LanguageStore {
-  getLanguage(): string;
-  setLanguage(language: string): void;
-}
-```
+### Configuration
 
-#### `I18nConfig`
-Configuration interface for i18n initialization.
+- `initI18n(config)` - Initialize the i18n instance
+- `createI18n(config)` - Create a custom i18n instance
 
-```typescript
-interface I18nConfig {
-  resources: Resource;
-  fallbackLng?: string;
-  compatibilityJSON?: 'v4';
-  interpolation?: {
-    escapeValue?: boolean;
-  };
-  languageStore?: LanguageStore;
-  onLanguageChange?: (language: string) => void;
-}
-```
+### Utilities
 
-### Classes
-
-#### `DefaultLanguageStore`
-Default in-memory implementation of `LanguageStore`.
-
-### Functions
-
-#### `createI18n(config: I18nConfig): Promise<i18n>`
-Initializes and configures the i18n instance.
-
-#### `getCurrentLanguage(): string`
-Returns the current active language.
-
-#### `changeLanguage(language: string): Promise<void>`
-Changes the current language.
-
-#### `getAvailableLanguages(): string[]`
-Returns an array of available language codes.
-
-## Supported Languages
-
-This package is designed to work with:
-- English (en)
-- Farsi/Persian (fa) - RTL support
-- Kurdish Sorani (ku) - RTL support
+- `changeLanguage(language)` - Change the current language
+- `getCurrentLanguage()` - Get the current language
+- `getAvailableLanguages()` - Get all available languages
+- `addResourceBundle(language, namespace, resources)` - Add new translations
 
 ## License
 

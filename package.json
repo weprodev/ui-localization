@@ -1,0 +1,77 @@
+{
+  "name": "@weprodev/wpd-pkg-localization",
+  "version": "0.1.0",
+  "description": "Localization package for React and React Native applications",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "test": "jest",
+    "test:package": "node scripts/test-package.js",
+    "lint": "eslint src --ext .ts,.tsx",
+    "prepublishOnly": "npm run build",
+    "dev": "rollup -c -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weprodev/wpd-pkg-localization.git"
+  },
+  "keywords": [
+    "i18n",
+    "localization",
+    "internationalization",
+    "react",
+    "react-native"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/weprodev/wpd-pkg-localization/issues"
+  },
+  "homepage": "https://github.com/weprodev/wpd-pkg-localization#readme",
+  "peerDependencies": {
+    "i18next": ">=21.0.0",
+    "react": ">=16.8.0",
+    "react-i18next": ">=11.0.0"
+  },
+  "dependencies": {
+    "i18next": "^23.7.6",
+    "react-i18next": "^13.5.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.3",
+    "@babel/preset-env": "^7.23.3",
+    "@babel/preset-react": "^7.23.3",
+    "@babel/preset-typescript": "^7.23.3",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@types/jest": "^29.5.10",
+    "@types/react": "^18.2.39",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "eslint": "^8.54.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rollup": "^4.6.0",
+    "rollup-plugin-dts": "^6.1.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "@rollup/plugin-terser": "^0.4.4",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.2"
+  }
+}
