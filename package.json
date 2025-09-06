@@ -6,8 +6,14 @@
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "scripts",
+    "bin"
   ],
+  "bin": {
+    "wpd-translation-validate": "./bin/wpd-translation-validate.js",
+    "wpd-translation-sync": "./bin/wpd-translation-sync.js"
+  },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
@@ -16,7 +22,9 @@
     "test": "jest",
     "lint": "eslint src --ext .ts,.tsx",
     "prepublishOnly": "npm run build",
-    "dev": "rollup -c -w"
+    "dev": "rollup -c -w",
+    "translation:validate": "node ./scripts/validate-translations.js --dir ./translations --source en",
+    "translation:sync": "node ./scripts/sync-translations.js --dir ./translations --source en"
   },
   "repository": {
     "type": "git",
