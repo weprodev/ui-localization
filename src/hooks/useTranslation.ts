@@ -1,10 +1,10 @@
-import { useTranslation } from 'react-i18next';
-import { ITranslation } from './type';
+import { useTranslation as useTranslationI18next } from 'react-i18next';
+import { Translation } from '../core/types';
 
-export default function useTranslate<T>(
+const useTranslation = <T>(
   translationLanguage: object
-): ITranslation<T> {
-  const { t } = useTranslation();
+): Translation<T> => {
+  const { t } = useTranslationI18next();
 
   const createTranslationProxy = (prefix = ''): any => {
     return new Proxy(
@@ -34,5 +34,7 @@ export default function useTranslate<T>(
     );
   };
 
-  return createTranslationProxy() as ITranslation<T>;
+  return createTranslationProxy() as Translation<T>;
 }
+
+export default useTranslation;

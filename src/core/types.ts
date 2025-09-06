@@ -1,0 +1,25 @@
+import { Resource } from "i18next";
+
+export interface LanguageStore {
+  getLanguage(): string | null;
+  setLanguage(language: string): void;
+}
+
+export interface LocalizationConfig {
+  resources: Resource;
+  fallbackLng?: string;
+  compatibilityJSON?: "v4";
+  interpolation?: {
+    escapeValue?: boolean;
+  };
+  languageStore?: LanguageStore;
+  onLanguageChange?: (language: string) => void;
+}
+
+
+export type TranslationKeys<T> = {
+    [K in keyof T]: T[K] extends object ? TranslationKeys<T[K]> : string;
+  };
+  
+  export type Translation<T> = TranslationKeys<T>;
+  

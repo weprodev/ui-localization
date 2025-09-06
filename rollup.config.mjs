@@ -43,7 +43,7 @@ export default [
       }),
       terser(),
     ],
-    external: ['react', 'react-dom', 'i18next', 'react-i18next'],
+    external: ['react'],
   },
   // Type definitions
   {

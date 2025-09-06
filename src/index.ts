@@ -1,20 +1,12 @@
-// Export types
-export type { ITranslation, TranslationKeys } from './type';
+export type {
+  Translation,
+  TranslationKeys,
+  LanguageStore,
+  LocalizationConfig,
+} from "./core/types";
+export { initLocalization } from "./core/initLocalization";
 
-// Export i18n configuration and utilities
-export {
-  type LanguageStore,
-  DefaultLanguageStore,
-  type I18nConfig,
-  initI18n,
-  changeLanguage,
-  getCurrentLanguage,
-  addResourceBundle,
-  getAvailableLanguages,
-  createI18n,
-} from './i18n';
-
-// Export React hooks
-export { default as useTranslate } from './useTranslate';
-export { default as useTranslateWithInterpolation } from './useTranslateWithInterpolation';
-export { default as useTranslationInjection } from './useTranslationInjection';
+export { default as useLanguage } from "./hooks/useLanguage";
+export { default as useTranslation } from "./hooks/useTranslation";
+export { default as useTranslationWithInterpolation } from "./hooks/useTranslationWithInterpolation";
+export { default as useTranslationInjection } from "./hooks/useTranslationInjection";

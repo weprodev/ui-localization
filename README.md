@@ -39,7 +39,7 @@ npm install @weprodev/wpd-pkg-localization
 ### Basic Setup
 
 ```typescript
-import { initI18n, useTranslate } from '@weprodev/wpd-pkg-localization';
+import { initLocalization, useTranslation } from '@weprodev/wpd-pkg-localization';
 
 // Define your translation structure
 type Translations = {
@@ -75,8 +75,8 @@ const resources = {
   },
 };
 
-// Initialize i18n
-initI18n({
+// Initialize localization
+initLocalization({
   resources,
   fallbackLng: 'en',
 });
@@ -94,7 +94,7 @@ function MyComponent() {
   };
 
   // Use the hook with your translation structure
-  const t = useTranslate<Translations>(translationStructure);
+  const t = useTranslation<Translations>(translationStructure);
 
   return (
     <div>
@@ -108,10 +108,10 @@ function MyComponent() {
 ### Using Interpolation
 
 ```typescript
-import { useTranslateWithInterpolation } from '@weprodev/wpd-pkg-localization';
+import { useTranslationWithInterpolation } from '@weprodev/wpd-pkg-localization';
 
 function MyComponent() {
-  const welcomeMessage = useTranslateWithInterpolation('welcome', { name: 'John' });
+  const welcomeMessage = useTranslationWithInterpolation('welcome', { name: 'John' });
   
   return <div>{welcomeMessage}</div>;
 }
@@ -119,11 +119,13 @@ function MyComponent() {
 
 ### Using Custom Language Store
 
-```typescript
-import { initI18n, LanguageStore } from '@weprodev/wpd-pkg-localization';
+#### Web Example
 
-// Create a custom language store for persistent storage
-class MyCustomLanguageStore implements LanguageStore {
+```typescript
+import { initLocalization, LanguageStore } from '@weprodev/wpd-pkg-localization';
+
+// Create a custom language store for web using localStorage
+class WebLanguageStore implements LanguageStore {
   getLanguage(): string | null {
     return localStorage.getItem('app-language');
   }
@@ -134,9 +136,77 @@ class MyCustomLanguageStore implements LanguageStore {
 }
 
 // Initialize with custom store
-initI18n({
+initLocalization({
   resources: { /* your translations */ },
-  languageStore: new MyCustomLanguageStore(),
+  languageStore: new WebLanguageStore(),
+});
+```
+
+#### React Native Example with AsyncStorage
+
+```typescript
+import { initLocalization, LanguageStore } from '@weprodev/wpd-pkg-localization';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Create a custom language store for React Native using AsyncStorage
+class RNLanguageStore implements LanguageStore {
+  getLanguage(): string | null {
+    // Note: Since LanguageStore interface doesn't support async methods,
+    // we need to use a synchronous approach or pre-load the value
+    // This is just an example - in a real app, you might want to
+    // load the language during app initialization
+    let storedLanguage = null;
+    try {
+      // In a real app, you would need to handle this asynchronously
+      // during app initialization, not inline like this
+      storedLanguage = AsyncStorage.getItem('app-language');
+    } catch (error) {
+      console.error('Failed to get language from storage', error);
+    }
+    return storedLanguage;
+  }
+
+  setLanguage(language: string): void {
+    try {
+      // Fire and forget approach
+      AsyncStorage.setItem('app-language', language);
+    } catch (error) {
+      console.error('Failed to store language', error);
+    }
+  }
+}
+
+// Initialize with custom store
+initLocalization({
+  resources: { /* your translations */ },
+  languageStore: new RNLanguageStore(),
+});
+```
+
+#### React Native Example with MMKV
+
+```typescript
+import { initLocalization, LanguageStore } from '@weprodev/wpd-pkg-localization';
+import { MMKV } from 'react-native-mmkv';
+
+// Create storage instance
+const storage = new MMKV();
+
+// Create a custom language store for React Native using MMKV
+class MMKVLanguageStore implements LanguageStore {
+  getLanguage(): string | null {
+    return storage.getString('app-language') || null;
+  }
+
+  setLanguage(language: string): void {
+    storage.set('app-language', language);
+  }
+}
+
+// Initialize with custom store
+initLocalization({
+  resources: { /* your translations */ },
+  languageStore: new MMKVLanguageStore(),
 });
 ```
 
@@ -158,21 +228,26 @@ const switchLanguage = async () => {
 
 ### Hooks
 
-- `useTranslate<T>(translationStructure)` - Creates a type-safe translation object
-- `useTranslateWithInterpolation(key, variables, components)` - For translations with variable interpolation
+- `useTranslation<T>(translationStructure)` - Creates a type-safe translation object
+- `useTranslationWithInterpolation(key, variables, components)` - For translations with variable interpolation and React components
 - `useTranslationInjection(key, variables)` - Direct access to i18next's t function
 
 ### Configuration
 
-- `initI18n(config)` - Initialize the i18n instance
-- `createI18n(config)` - Create a custom i18n instance
+- `initLocalization(config)` - Initialize the i18n instance with configuration
 
 ### Utilities
 
 - `changeLanguage(language)` - Change the current language
 - `getCurrentLanguage()` - Get the current language
 - `getAvailableLanguages()` - Get all available languages
-- `addResourceBundle(language, namespace, resources)` - Add new translations
+
+### Types
+
+- `Translation<T>` - Type for creating strongly-typed translations
+- `TranslationKeys<T>` - Helper type for translation keys
+- `LanguageStore` - Interface for custom language storage implementations
+- `LocalizationConfig` - Configuration options for initialization
 
 ## License
 

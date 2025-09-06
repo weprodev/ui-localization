@@ -21,7 +21,6 @@ coverage/
 # Development files
 .DS_Store
 node_modules/
-temp-test-package/
 
 # IDE files
 .idea/

@@ -14,7 +14,6 @@
   "scripts": {
     "build": "rollup -c",
     "test": "jest",
-    "test:package": "node scripts/test-package.js",
     "lint": "eslint src --ext .ts,.tsx",
     "prepublishOnly": "npm run build",
     "dev": "rollup -c -w"
@@ -30,16 +29,14 @@
     "react",
     "react-native"
   ],
-  "author": "Your Name",
+  "author": "WeProDev",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/weprodev/wpd-pkg-localization/issues"
   },
   "homepage": "https://github.com/weprodev/wpd-pkg-localization#readme",
   "peerDependencies": {
-    "i18next": ">=21.0.0",
-    "react": ">=16.8.0",
-    "react-i18next": ">=11.0.0"
+    "react": ">=16.8.0"
   },
   "dependencies": {
     "i18next": "^23.7.6",
