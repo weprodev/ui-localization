@@ -1,6 +1,6 @@
 {
   "name": "@weprodev/wpd-pkg-localization",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Localization package for React and React Native applications",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
