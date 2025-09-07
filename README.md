@@ -1,253 +1,233 @@
-# WPD Package Localization
+# @weprodev/wpd-pkg-localization
 
-A powerful and flexible localization package for React and React Native applications.
+A lightweight localization package for React and React Native applications based on i18next.
 
 ## Features
 
-- Type-safe translations with TypeScript
-- Support for nested translation structures
-- React hooks for easy integration
-- Support for string interpolation
-- Language detection and switching
-- Custom language storage
+- 🌐 Simple React hooks for translations
+- 🔄 Support for language switching
+- 📝 String injection
+- 🧩 Component interpolation
+- 🔍 Translation validation tools
+- 🔄 Translation sync utilities
 
 ## Installation
 
+### 1. Configure GitHub Packages Authentication
+
+Create or update `.npmrc` in your project root:
+
+```
+@weprodev:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NPM_TOKEN}
+```
+
+Set your GitHub Personal Access Token with `read:packages` scope:
+
 ```bash
-npm install @weprodev/wpd-pkg-localization i18next react-i18next
-# or
-yarn add @weprodev/wpd-pkg-localization i18next react-i18next
+# macOS/Linux
+export NPM_TOKEN=your_github_token
+
+# Windows (PowerShell)
+setx NPM_TOKEN "your_github_token"
 ```
 
-### GitHub Packages Installation
-
-To install from GitHub Packages, add the following to your `.npmrc` file:
-
-```
-@weprodev:registry=https://npm.pkg.github.com/
-//npm.pkg.github.com/:_authToken=${YOUR_GITHUB_TOKEN}
-```
-
-Then install the package:
+### 2. Install the package
 
 ```bash
 npm install @weprodev/wpd-pkg-localization
 ```
 
+## Setup
+
+### 1. Create translation files
+
+Create a `translations` directory in your project with language files:
+
+```ts
+// translations/en.ts
+const en = {
+  common: {
+    hello: "Hello",
+    welcome: "Welcome"
+  },
+  // Add more translation keys as needed
+};
+
+export default en;
+```
+
+```ts
+// translations/fr.ts
+const fr = {
+  common: {
+    hello: "Bonjour",
+    welcome: "Bienvenue"
+  },
+  // Add more translation keys as needed
+};
+
+export default fr;
+```
+
+### 2. Create localization configuration
+
+```tsx
+// src/localizationConfig.ts
+import { LocalizationConfig, LanguageStore } from '@weprodev/wpd-pkg-localization';
+import en from './translations/en';
+import fr from './translations/fr';
+
+// Optional: Create a custom language store
+class MyLanguageStore implements LanguageStore {
+  getLanguage(): string | null {
+    return localStorage.getItem("language") || null;
+  }
+
+  setLanguage(language: string): void {
+    localStorage.setItem("language", language);
+  }
+}
+
+export const localizationConfig: LocalizationConfig = {
+  resources: {
+    en: { translation: en },
+    fr: { translation: fr }
+  },
+  fallbackLng: 'en',
+  languageStore: new MyLanguageStore()
+};
+```
+
+### 3. Initialize localization in your app
+
+```tsx
+// src/index.tsx
+import React, { StrictMode } from 'react';
+import ReactDOM from 'react-dom/client';
+import { initLocalization } from '@weprodev/wpd-pkg-localization';
+import { localizationConfig } from './localizationConfig';
+import App from './App';
+
+const rootElement = document.getElementById('root');
+
+// Initialize localization before rendering the app
+initLocalization(localizationConfig).then(() => {
+  ReactDOM.createRoot(rootElement).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+});
+```
+
 ## Usage
 
-### Basic Setup
+### Basic Translation
 
-```typescript
-import { initLocalization, useTranslation } from '@weprodev/wpd-pkg-localization';
+```tsx
+// Optional: Create a type-safe translation hook
+// src/hooks/useTranslation.ts
+import { useTranslation as useTranslationBase } from '@weprodev/wpd-pkg-localization';
+import en from '../translations/en';
 
-// Define your translation structure
-type Translations = {
-  hello: string;
-  welcome: string;
-  nested: {
-    greeting: string;
-    farewell: string;
-  };
+export const useTranslation = () => {
+  return useTranslationBase<typeof en>(en);
 };
 
-// Define your translations
-const resources = {
-  en: {
-    translation: {
-      hello: 'Hello',
-      welcome: 'Welcome {{name}}',
-      nested: {
-        greeting: 'Good morning',
-        farewell: 'Goodbye',
-      },
-    },
-  },
-  fr: {
-    translation: {
-      hello: 'Bonjour',
-      welcome: 'Bienvenue {{name}}',
-      nested: {
-        greeting: 'Bonjour',
-        farewell: 'Au revoir',
-      },
-    },
-  },
-};
+// Usage in components
+import { useTranslation } from '../hooks/useTranslation';
 
-// Initialize localization
-initLocalization({
-  resources,
-  fallbackLng: 'en',
-});
-
-// In your component
-function MyComponent() {
-  // Create the translation structure
-  const translationStructure = {
-    hello: '',
-    welcome: '',
-    nested: {
-      greeting: '',
-      farewell: '',
-    },
-  };
-
-  // Use the hook with your translation structure
-  const t = useTranslation<Translations>(translationStructure);
-
-  return (
-    <div>
-      <h1>{t.hello}</h1>
-      <p>{t.nested.greeting}</p>
-    </div>
-  );
-}
-```
-
-### Using Interpolation
-
-```typescript
-import { useTranslationWithInterpolation } from '@weprodev/wpd-pkg-localization';
-
-function MyComponent() {
-  const welcomeMessage = useTranslationWithInterpolation('welcome', { name: 'John' });
+function Welcome() {
+  const t = useTranslation();
   
-  return <div>{welcomeMessage}</div>;
+  return <h1>{t.common.welcome}</h1>;
 }
-```
-
-### Using Custom Language Store
-
-#### Web Example
-
-```typescript
-import { initLocalization, LanguageStore } from '@weprodev/wpd-pkg-localization';
-
-// Create a custom language store for web using localStorage
-class WebLanguageStore implements LanguageStore {
-  getLanguage(): string | null {
-    return localStorage.getItem('app-language');
-  }
-
-  setLanguage(language: string): void {
-    localStorage.setItem('app-language', language);
-  }
-}
-
-// Initialize with custom store
-initLocalization({
-  resources: { /* your translations */ },
-  languageStore: new WebLanguageStore(),
-});
-```
-
-#### React Native Example with AsyncStorage
-
-```typescript
-import { initLocalization, LanguageStore } from '@weprodev/wpd-pkg-localization';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Create a custom language store for React Native using AsyncStorage
-class RNLanguageStore implements LanguageStore {
-  getLanguage(): string | null {
-    // Note: Since LanguageStore interface doesn't support async methods,
-    // we need to use a synchronous approach or pre-load the value
-    // This is just an example - in a real app, you might want to
-    // load the language during app initialization
-    let storedLanguage = null;
-    try {
-      // In a real app, you would need to handle this asynchronously
-      // during app initialization, not inline like this
-      storedLanguage = AsyncStorage.getItem('app-language');
-    } catch (error) {
-      console.error('Failed to get language from storage', error);
-    }
-    return storedLanguage;
-  }
-
-  setLanguage(language: string): void {
-    try {
-      // Fire and forget approach
-      AsyncStorage.setItem('app-language', language);
-    } catch (error) {
-      console.error('Failed to store language', error);
-    }
-  }
-}
-
-// Initialize with custom store
-initLocalization({
-  resources: { /* your translations */ },
-  languageStore: new RNLanguageStore(),
-});
-```
-
-#### React Native Example with MMKV
-
-```typescript
-import { initLocalization, LanguageStore } from '@weprodev/wpd-pkg-localization';
-import { MMKV } from 'react-native-mmkv';
-
-// Create storage instance
-const storage = new MMKV();
-
-// Create a custom language store for React Native using MMKV
-class MMKVLanguageStore implements LanguageStore {
-  getLanguage(): string | null {
-    return storage.getString('app-language') || null;
-  }
-
-  setLanguage(language: string): void {
-    storage.set('app-language', language);
-  }
-}
-
-// Initialize with custom store
-initLocalization({
-  resources: { /* your translations */ },
-  languageStore: new MMKVLanguageStore(),
-});
 ```
 
 ### Changing Language
 
-```typescript
-import { changeLanguage, getCurrentLanguage } from '@weprodev/wpd-pkg-localization';
+```tsx
+import { useLanguage } from '@weprodev/wpd-pkg-localization';
 
-// Get current language
-const currentLang = getCurrentLanguage();
-
-// Change language
-const switchLanguage = async () => {
-  await changeLanguage('fr');
-};
+function LanguageSwitcher() {
+  const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
+  
+  return (
+    <select 
+      value={currentLanguage} 
+      onChange={(e) => changeLanguage(e.target.value)}
+    >
+      {availableLanguages.map(lang => (
+        <option key={lang} value={lang}>{lang}</option>
+      ))}
+    </select>
+  );
+}
 ```
 
-## API Reference
+### Translation with Variables
 
-### Hooks
+```tsx
+import { useTranslation } from '../hooks/useTranslation';
+import { useTranslationInjection } from '@weprodev/wpd-pkg-localization';
 
-- `useTranslation<T>(translationStructure)` - Creates a type-safe translation object
-- `useTranslationWithInterpolation(key, variables, components)` - For translations with variable interpolation and React components
-- `useTranslationInjection(key, variables)` - Direct access to i18next's t function
+function Greeting({ name }) {
+  const t = useTranslation();
+  
+  // Assuming you have a translation key: "greeting": "Hello, {{name}}!"
+  const greeting = useTranslationInjection(t.common.greeting, { name });
+  
+  return <p>{greeting}</p>;
+}
+```
 
-### Configuration
+### Translation with Components
 
-- `initLocalization(config)` - Initialize the i18n instance with configuration
+```tsx
+import { useTranslation } from '../hooks/useTranslation';
+import { useTranslationWithInterpolation } from '@weprodev/wpd-pkg-localization';
 
-### Utilities
+function TermsAgreement({ name }) {
+  const t = useTranslation();
+  
+  // Assuming you have a translation key: "welcome": "Welcome <strong>{{name}}</strong>"
+  const welcomeElement = useTranslationWithInterpolation(t.common.welcome, { name }, {
+    strong: <strong style={{ color: "red" }} />
+  });
+  
+  return <div>{welcomeElement}</div>;
+}
+```
 
-- `changeLanguage(language)` - Change the current language
-- `getCurrentLanguage()` - Get the current language
-- `getAvailableLanguages()` - Get all available languages
+## Translation Management Tools
 
-### Types
+The package includes two CLI tools to help manage translations:
 
-- `Translation<T>` - Type for creating strongly-typed translations
-- `TranslationKeys<T>` - Helper type for translation keys
-- `LanguageStore` - Interface for custom language storage implementations
-- `LocalizationConfig` - Configuration options for initialization
+### Validate Translations
+
+Checks if all language files have the same keys as the source language:
+
+```bash
+npx wpd-translation-validate --dir ./translations --source en
+```
+
+### Sync Translations
+
+Adds missing keys from the source language to all other language files (with empty strings for missing translations):
+
+```bash
+npx wpd-translation-sync --dir ./translations --source en
+```
+
+You can also add these commands to your package.json scripts:
+
+```json
+"scripts": {
+  "translation:validate": "wpd-translation-validate --dir ./translations --source en",
+  "translation:sync": "wpd-translation-sync --dir ./translations --source en"
+}
+```
 
 ## License
 
