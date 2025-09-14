@@ -229,6 +229,9 @@ You can also add these commands to your package.json scripts:
 }
 ```
 
+💡 We recommend running `translation:validate` as part of your CI pipeline.
+This ensures that every pull request is checked for missing or inconsistent translations before merging, keeping your localization files clean and consistent as the project grows.
+
 ## License
 
 MIT
