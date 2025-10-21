@@ -1,15 +1,13 @@
-import { createLanguageDetectorPlugin } from '../../core/languageDetector';
+import { createLanguageDetector } from '../../core/languageDetector';
 import { MockLanguageStore } from '../__mocks__/mocks';
 
 describe('languageDetector', () => {
   let mockLanguageStore: MockLanguageStore;
-  let languageDetector: ReturnType<typeof createLanguageDetectorPlugin>;
-  let callbackMock: jest.Mock;
+  let languageDetector: ReturnType<typeof createLanguageDetector>;
 
   beforeEach(() => {
     mockLanguageStore = new MockLanguageStore();
-    languageDetector = createLanguageDetectorPlugin(mockLanguageStore);
-    callbackMock = jest.fn();
+    languageDetector = createLanguageDetector(mockLanguageStore);
   });
 
   describe('detect', () => {
@@ -18,23 +16,23 @@ describe('languageDetector', () => {
       mockLanguageStore.setLanguage('fr');
       
       // When detect is called
-      languageDetector.detect(callbackMock);
+      const result = languageDetector.detect();
       
-      // Then the callback should be called with the stored language
-      expect(callbackMock).toHaveBeenCalledWith('fr');
+      // Then it should return the stored language
+      expect(result).toBe('fr');
     });
 
-    it('should return default language "en" when no language is stored', () => {
+    it('should return undefined when no language is stored', () => {
       // Given no stored language
       
       // When detect is called
-      languageDetector.detect(callbackMock);
+      const result = languageDetector.detect();
       
-      // Then the callback should be called with the default language
-      expect(callbackMock).toHaveBeenCalledWith('en');
+      // Then it should return undefined
+      expect(result).toBe(undefined);
     });
 
-    it('should handle errors and return default language "en"', () => {
+    it('should handle errors and return undefined', () => {
       // Given a language store that throws an error
       const errorStore = {
         getLanguage: jest.fn().mockImplementation(() => {
@@ -43,13 +41,13 @@ describe('languageDetector', () => {
         setLanguage: jest.fn()
       };
       
-      const errorDetector = createLanguageDetectorPlugin(errorStore);
+      const errorDetector = createLanguageDetector(errorStore);
       
       // When detect is called
-      errorDetector.detect(callbackMock);
+      const result = errorDetector.detect();
       
-      // Then the callback should be called with the default language
-      expect(callbackMock).toHaveBeenCalledWith('en');
+      // Then it should return undefined
+      expect(result).toBe(undefined);
     });
   });
 
@@ -59,7 +57,7 @@ describe('languageDetector', () => {
       const language = 'es';
       
       // When cacheUserLanguage is called
-      languageDetector.cacheUserLanguage(language);
+      languageDetector.cacheUserLanguage?.(language);
       
       // Then the language should be stored
       expect(mockLanguageStore.getLanguage()).toBe(language);
@@ -74,12 +72,12 @@ describe('languageDetector', () => {
         })
       };
       
-      const errorDetector = createLanguageDetectorPlugin(errorStore);
+      const errorDetector = createLanguageDetector(errorStore);
       
       // When cacheUserLanguage is called
       // Then no error should be thrown
       expect(() => {
-        errorDetector.cacheUserLanguage('de');
+        errorDetector.cacheUserLanguage?.('de');
       }).not.toThrow();
     });
   });
@@ -88,16 +86,9 @@ describe('languageDetector', () => {
     it('should have the correct plugin structure', () => {
       expect(languageDetector).toEqual(expect.objectContaining({
         type: 'languageDetector',
-        async: false,
-        init: expect.any(Function),
         detect: expect.any(Function),
         cacheUserLanguage: expect.any(Function)
       }));
-    });
-
-    it('should have an init method that does nothing', () => {
-      // The init method should exist but not do anything
-      expect(() => languageDetector.init()).not.toThrow();
     });
   });
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderHook } from '@testing-library/react';
-import useTranslationWithInterpolation from '../../hooks/useTranslationWithInterpolation';
+import { useTranslationWithInterpolation } from '../../hooks/useTranslationWithInterpolation';
 
 // Skip tests for useTranslationWithInterpolation
 // These tests are challenging due to how React elements are created and compared

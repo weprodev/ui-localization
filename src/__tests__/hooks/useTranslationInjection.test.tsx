@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import useTranslationInjection from '../../hooks/useTranslationInjection';
+import { useTranslationInjection } from '../../hooks/useTranslationInjection';
 
 // Mock react-i18next
 jest.mock('react-i18next', () => ({
