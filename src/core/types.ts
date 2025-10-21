@@ -13,13 +13,4 @@ export interface LocalizationConfig {
     escapeValue?: boolean;
   };
   languageStore?: LanguageStore;
-  onLanguageChange?: (language: string) => void;
 }
-
-
-export type TranslationKeys<T> = {
-    [K in keyof T]: T[K] extends object ? TranslationKeys<T[K]> : string;
-  };
-  
-  export type Translation<T> = TranslationKeys<T>;
-  

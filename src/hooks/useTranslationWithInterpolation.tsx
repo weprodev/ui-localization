@@ -4,7 +4,7 @@ import { Trans } from 'react-i18next';
 type Variables = { [key: string]: any };
 type Components = { [key: string]: ReactElement };
 
-const useTranslationWithInterpolation = (
+export const useTranslationWithInterpolation = (
   key: string,
   variables: Variables = {},
   components: Components = {}
@@ -14,5 +14,3 @@ const useTranslationWithInterpolation = (
     [key, variables, components]
   );
 };
-
-export default useTranslationWithInterpolation;
