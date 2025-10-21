@@ -5,6 +5,12 @@ import { DefaultLanguageStore } from "./DefaultLanguageStore";
 import { LocalizationConfig } from "./types";
 import { createLanguageDetector } from "./languageDetector";
 
+/**
+ * Initializes i18next with the provided configuration.
+ * 
+ * @param config - Localization configuration object
+ * @returns Promise that resolves when initialization is complete
+ */
 export const initLocalization = async (config: LocalizationConfig) => {
   const {
     resources,

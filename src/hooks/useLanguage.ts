@@ -1,6 +1,11 @@
 import { useCallback } from "react";
 import { useTranslation as useTranslationI18next } from "react-i18next";
 
+/**
+ * Hook for language management.
+ * 
+ * @returns Object containing current language, available languages, and language change function
+ */
 export const useLanguage = () => {
   const { i18n } = useTranslationI18next();
 
