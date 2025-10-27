@@ -206,6 +206,8 @@ const Welcome: React.FC = () => {
 };
 ```
 
+**Troubleshooting: If you encounter TypeScript errors with the type-safe hook, you can use `useTranslationFallback()` as an escape hatch. See the API Reference for details.**
+
 #### 5. Language Switching
 
 ```typescript
@@ -549,6 +551,20 @@ Provides language management functionality.
 ```typescript
 const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
 ```
+
+#### `useTranslationFallback()`
+**⚠️ Escape hatch hook - use only when the main `useTranslation` hook has TypeScript issues.**
+
+Returns the raw i18next translation function without type safety. This should only be used in rare edge cases where the type-safe hook encounters problems.
+
+```typescript
+// Only use when useTranslation has TypeScript errors
+const t = useTranslationFallback();
+const text = t('common.hello'); // No type safety - standard i18next usage
+const withVars = t('greeting', { name: 'John' });
+```
+
+**Note:** The main `useTranslation` hook should be preferred in 99% of cases.
 
 #### `useTranslationInjection(key, variables)`
 Injects variables into translation strings.
