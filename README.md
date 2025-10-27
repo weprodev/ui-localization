@@ -473,27 +473,11 @@ const TermsAgreement: React.FC<{ name: string }> = ({ name }) => {
 
 ## 🛠️ Translation Management Tools
 
-The package includes powerful CLI tools to help manage your translations:
+The package includes powerful CLI tools to help manage your translations. You can use these tools in multiple ways:
 
-### Validate Translations
+### Option 1: Using NPM Scripts (Recommended)
 
-Check if all language files have the same keys as the source language:
-
-```bash
-npx wpd-translation-validate --dir ./translations --source en
-```
-
-### Sync Translations
-
-Add missing keys from the source language to all other language files:
-
-```bash
-npx wpd-translation-sync --dir ./translations --source en
-```
-
-### Package.json Scripts
-
-Add these commands to your `package.json` scripts for convenience:
+Add these commands to your project's `package.json` scripts:
 
 ```json
 {
@@ -503,6 +487,52 @@ Add these commands to your `package.json` scripts for convenience:
   }
 }
 ```
+
+Then run:
+
+```bash
+npm run translation:validate
+npm run translation:sync
+```
+
+**Customizing paths:**
+
+Modify the scripts in your `package.json` to use different directories or source language:
+
+```json
+{
+  "scripts": {
+    "translation:validate": "wpd-translation-validate --dir ./src/translations --source es",
+    "translation:sync": "wpd-translation-sync --dir ./src/translations --source es"
+  }
+}
+```
+
+### Option 2: Using npx (Direct CLI)
+
+Run the CLI tools directly via npx:
+
+```bash
+# Validate translations
+npx wpd-translation-validate --dir ./translations --source en
+
+# Sync translations
+npx wpd-translation-sync --dir ./translations --source en
+```
+
+### What These Tools Do
+
+**Validate Translations** (`validate-translations`)
+- Checks if all language files have the same keys as the source language
+- Reports missing keys for each language file
+- Exits with error code if inconsistencies are found
+- Perfect for CI/CD integration
+
+**Sync Translations** (`sync-translations`)
+- Adds missing keys from the source language to all other language files
+- Preserves existing translations
+- Sets empty string values for new keys (ready for translation)
+- Updates translation files automatically
 
 ### CI/CD Integration
 
