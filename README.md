@@ -163,19 +163,47 @@ initLocalization(localizationConfig).then(() => {
 // src/components/Welcome.tsx
 import React from 'react';
 import { useTranslation } from '@weprodev/wpd-pkg-localization';
+import en from '../translations/en';
 
 const Welcome: React.FC = () => {
-  const t = useTranslation();
+  // Type-safe translation hook with intellisense
+  const t = useTranslation<typeof en>(en);
   
   return (
     <div>
-      <h1>{t('common.welcome')}</h1>
-      <p>{t('common.hello')}</p>
+      <h1>{t.common.welcome}</h1>
+      <p>{t.common.hello}</p>
     </div>
   );
 };
 
 export default Welcome;
+```
+
+**Alternative: Create a custom hook for better reusability**
+
+```typescript
+// src/hooks/useAppTranslation.ts
+import { useTranslation } from '@weprodev/wpd-pkg-localization';
+import en from '../translations/en';
+
+export const useAppTranslation = () => {
+  return useTranslation<typeof en>(en);
+};
+
+// Usage in components
+import { useAppTranslation } from '../hooks/useAppTranslation';
+
+const Welcome: React.FC = () => {
+  const t = useAppTranslation();
+  
+  return (
+    <div>
+      <h1>{t.common.welcome}</h1> {/* Full intellisense support */}
+      <p>{t.common.hello}</p>
+    </div>
+  );
+};
 ```
 
 #### 5. Language Switching
@@ -292,14 +320,16 @@ export default App;
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from '@weprodev/wpd-pkg-localization';
+import en from '../translations/en';
 
 const Welcome: React.FC = () => {
-  const t = useTranslation();
+  // Type-safe translation hook with intellisense
+  const t = useTranslation<typeof en>(en);
   
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t('common.welcome')}</Text>
-      <Text style={styles.subtitle}>{t('common.hello')}</Text>
+      <Text style={styles.title}>{t.common.welcome}</Text>
+      <Text style={styles.subtitle}>{t.common.hello}</Text>
     </View>
   );
 };
@@ -403,11 +433,14 @@ export default LanguageSwitcher;
 ### Translation with Variables
 
 ```typescript
-import { useTranslationInjection } from '@weprodev/wpd-pkg-localization';
+import { useTranslation, useTranslationInjection } from '@weprodev/wpd-pkg-localization';
+import en from '../translations/en';
 
 const Greeting: React.FC<{ name: string }> = ({ name }) => {
+  const t = useTranslation<typeof en>(en);
+  
   // Translation key: "greeting": "Hello, {{name}}!"
-  const greeting = useTranslationInjection('common.greeting', { name });
+  const greeting = useTranslationInjection(t.common.greeting, { name });
   
   return <p>{greeting}</p>;
 };
@@ -416,12 +449,15 @@ const Greeting: React.FC<{ name: string }> = ({ name }) => {
 ### Translation with Components
 
 ```typescript
-import { useTranslationWithInterpolation } from '@weprodev/wpd-pkg-localization';
+import { useTranslation, useTranslationWithInterpolation } from '@weprodev/wpd-pkg-localization';
+import en from '../translations/en';
 
 const TermsAgreement: React.FC<{ name: string }> = ({ name }) => {
+  const t = useTranslation<typeof en>(en);
+  
   // Translation key: "welcome": "Welcome <strong>{{name}}</strong>"
   const welcomeElement = useTranslationWithInterpolation(
-    'common.welcome', 
+    t.common.welcome, 
     { name }, 
     {
       strong: <strong style={{ color: "red" }} />
@@ -480,12 +516,31 @@ We recommend running `translation:validate` as part of your CI pipeline to ensur
 
 ### Hooks
 
-#### `useTranslation()`
-Returns the translation function from react-i18next.
+#### `useTranslation<T>(translationLanguage: object)`
+Returns a type-safe translation proxy object with intellisense support.
+
+**Parameters:**
+- `translationLanguage`: The translation object to provide type safety for
+
+**Returns:** Type-safe translation proxy object
 
 ```typescript
-const t = useTranslation();
-const translatedText = t('common.hello');
+import en from '../translations/en';
+
+const t = useTranslation<typeof en>(en);
+const translatedText = t.common.hello; // Type-safe with intellisense
+```
+
+**Note:** For better reusability, consider creating a custom hook:
+
+```typescript
+// src/hooks/useAppTranslation.ts
+import { useTranslation } from '@weprodev/wpd-pkg-localization';
+import en from '../translations/en';
+
+export const useAppTranslation = () => {
+  return useTranslation<typeof en>(en);
+};
 ```
 
 #### `useLanguage()`
@@ -552,6 +607,7 @@ interface LocalizationConfig {
   languageStore?: LanguageStore;
 }
 ```
+
 
 ## 🆘 Support
 
