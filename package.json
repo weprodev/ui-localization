@@ -1,6 +1,6 @@
 {
-  "name": "@weprodev/wpd-pkg-localization",
-  "version": "3.0.0",
+  "name": "@weprodev-team/wpd-pkg-localization",
+  "version": "3.0.1",
   "description": "Localization package for React and React Native applications",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -15,7 +15,7 @@
     "wpd-translation-sync": "./bin/wpd-translation-sync.js"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "rollup -c",

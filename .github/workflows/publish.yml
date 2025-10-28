@@ -12,19 +12,32 @@ jobs:
     permissions:
       contents: read
       packages: write
+
     steps:
+      # 1. Checkout repo
       - uses: actions/checkout@v4
+
+      # 2. Setup Node.js
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-          registry-url: https://npm.pkg.github.com/
+          registry-url: https://registry.npmjs.org/
+
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
+
+      # 4. Build package
       - name: Build package
         run: npm run build
+
+      # 5. Run tests
       - name: Run tests
         run: npm test
+
+      # 6. Publish package (only on tags)
       - name: Publish package
-        run: npm publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
