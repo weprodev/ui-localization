@@ -1,4 +1,4 @@
-# @weprodev-team/wpd-pkg-localization
+# @weprodev/ui-localization
 
 A lightweight, professional localization package for React and React Native applications built on top of i18next and react-i18next. This package provides a clean, type-safe API for managing translations with built-in language switching, variable injection, and component interpolation capabilities.
 
@@ -17,7 +17,7 @@ A lightweight, professional localization package for React and React Native appl
 ## 📦 Installation
 
 ```bash
-npm install @weprodev-team/wpd-pkg-localization
+npm install @weprodev/ui-localization
 ```
 
 ## 🚀 Quick Start
@@ -78,7 +78,7 @@ export default es;
 
 ```typescript
 // src/localizationConfig.ts
-import { LocalizationConfig, LanguageStore } from '@weprodev-team/wpd-pkg-localization';
+import { LocalizationConfig, LanguageStore } from '@weprodev/ui-localization';
 import en from '../translations/en';
 import es from '../translations/es';
 
@@ -109,7 +109,7 @@ export const localizationConfig: LocalizationConfig = {
 // src/index.tsx
 import React, { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
-import { initLocalization } from '@weprodev-team/wpd-pkg-localization';
+import { initLocalization } from '@weprodev/ui-localization';
 import { localizationConfig } from './localizationConfig';
 import App from './App';
 
@@ -130,7 +130,7 @@ initLocalization(localizationConfig).then(() => {
 ```typescript
 // src/components/Welcome.tsx
 import React from 'react';
-import { useTranslation } from '@weprodev-team/wpd-pkg-localization';
+import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
 const Welcome: React.FC = () => {
@@ -152,7 +152,7 @@ export default Welcome;
 
 ```typescript
 // src/hooks/useAppTranslation.ts
-import { useTranslation } from '@weprodev-team/wpd-pkg-localization';
+import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
 export const useAppTranslation = () => {
@@ -181,7 +181,7 @@ const Welcome: React.FC = () => {
 ```typescript
 // src/components/LanguageSwitcher.tsx
 import React from 'react';
-import { useLanguage } from '@weprodev-team/wpd-pkg-localization';
+import { useLanguage } from '@weprodev/ui-localization';
 
 const LanguageSwitcher: React.FC = () => {
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
@@ -213,7 +213,7 @@ Same structure as React applications (see above).
 
 ```typescript
 // src/localizationConfig.ts
-import { LocalizationConfig, LanguageStore } from '@weprodev-team/wpd-pkg-localization';
+import { LocalizationConfig, LanguageStore } from '@weprodev/ui-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import en from '../translations/en';
 import es from '../translations/es';
@@ -253,7 +253,7 @@ export const localizationConfig: LocalizationConfig = {
 // src/App.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
-import { initLocalization } from '@weprodev-team/wpd-pkg-localization';
+import { initLocalization } from '@weprodev/ui-localization';
 import { localizationConfig } from './localizationConfig';
 
 const App: React.FC = () => {
@@ -289,7 +289,7 @@ export default App;
 // src/components/Welcome.tsx
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useTranslation } from '@weprodev-team/wpd-pkg-localization';
+import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
 const Welcome: React.FC = () => {
@@ -331,7 +331,7 @@ export default Welcome;
 // src/components/LanguageSwitcher.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useLanguage } from '@weprodev-team/wpd-pkg-localization';
+import { useLanguage } from '@weprodev/ui-localization';
 
 const LanguageSwitcher: React.FC = () => {
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
@@ -403,7 +403,7 @@ export default LanguageSwitcher;
 ### Translation with Variables
 
 ```typescript
-import { useTranslation, useTranslationInjection } from '@weprodev-team/wpd-pkg-localization';
+import { useTranslation, useTranslationInjection } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
 const Greeting: React.FC<{ name: string }> = ({ name }) => {
@@ -419,7 +419,7 @@ const Greeting: React.FC<{ name: string }> = ({ name }) => {
 ### Translation with Components
 
 ```typescript
-import { useTranslation, useTranslationWithInterpolation } from '@weprodev-team/wpd-pkg-localization';
+import { useTranslation, useTranslationWithInterpolation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
 const TermsAgreement: React.FC<{ name: string }> = ({ name }) => {
@@ -535,7 +535,7 @@ const translatedText = t.common.hello; // Type-safe with intellisense
 
 ```typescript
 // src/hooks/useAppTranslation.ts
-import { useTranslation } from '@weprodev-team/wpd-pkg-localization';
+import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
 export const useAppTranslation = () => {
@@ -638,4 +638,4 @@ This project is licensed under the MIT License.
 
 ---
 
-**@weprodev-team/wpd-pkg-localization** - Professional localization solution by WeProDev
+**@weprodev/ui-localization** - Professional localization solution by WeProDev
