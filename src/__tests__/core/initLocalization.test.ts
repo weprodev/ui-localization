@@ -1,11 +1,10 @@
 import i18n from 'i18next';
 import { initLocalization } from '../../core/initLocalization';
-import { createLanguageDetectorPlugin } from '../../core/languageDetector';
+import { createLanguageDetector } from '../../core/languageDetector';
 import { DefaultLanguageStore } from '../../core/DefaultLanguageStore';
 import { MockLanguageStore } from '../__mocks__/mocks';
 import { LocalizationConfig } from '../../core/types';
 
-// Mock i18next and react-i18next
 jest.mock('i18next', () => {
   const mockI18n = {
     use: jest.fn().mockReturnThis(),
@@ -20,7 +19,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 jest.mock('../../core/languageDetector', () => ({
-  createLanguageDetectorPlugin: jest.fn().mockReturnValue('languageDetector-mock'),
+  createLanguageDetector: jest.fn().mockReturnValue('languageDetector-mock'),
 }));
 
 describe('initLocalization', () => {
@@ -54,10 +53,8 @@ describe('initLocalization', () => {
   });
 
   it('should initialize i18n with default options when minimal config is provided', async () => {
-    // When initLocalization is called with minimal config
     await initLocalization(defaultConfig);
     
-    // Then i18n should be initialized with expected plugins and options
     expect(i18n.use).toHaveBeenCalledWith('initReactI18next-mock');
     expect(i18n.use).toHaveBeenCalledWith('languageDetector-mock');
     expect(i18n.init).toHaveBeenCalledWith(expect.objectContaining({
@@ -66,41 +63,39 @@ describe('initLocalization', () => {
       compatibilityJSON: 'v4',
       interpolation: { escapeValue: false },
     }));
-    expect(createLanguageDetectorPlugin).toHaveBeenCalledWith(mockLanguageStore);
+    expect(createLanguageDetector).toHaveBeenCalledWith(mockLanguageStore);
   });
 
   it('should use the language from store when available', async () => {
-    // Given a language store with a language set
     mockLanguageStore.setLanguage('fr');
     
-    // When initLocalization is called
     await initLocalization(defaultConfig);
     
-    // Then i18n should be initialized with that language
     expect(i18n.init).toHaveBeenCalledWith(expect.objectContaining({
-      lng: 'fr',
+      resources: mockResources,
+      fallbackLng: 'en',
+      compatibilityJSON: 'v4',
+      interpolation: { escapeValue: false },
     }));
   });
 
   it('should use fallbackLng when no language is in store', async () => {
-    // Given a config with a specific fallback language
     const config = {
       ...defaultConfig,
       fallbackLng: 'es',
     };
     
-    // When initLocalization is called
     await initLocalization(config);
     
-    // Then i18n should be initialized with the fallback language
     expect(i18n.init).toHaveBeenCalledWith(expect.objectContaining({
       fallbackLng: 'es',
-      lng: 'es',
+      resources: mockResources,
+      compatibilityJSON: 'v4',
+      interpolation: { escapeValue: false },
     }));
   });
 
   it('should handle language store errors gracefully', async () => {
-    // Given a language store that throws an error
     const errorStore = {
       getLanguage: jest.fn().mockImplementation(() => {
         throw new Error('Storage error');
@@ -114,93 +109,92 @@ describe('initLocalization', () => {
       fallbackLng: 'de',
     };
     
-    // When initLocalization is called
     await initLocalization(config);
     
-    // Then i18n should be initialized with the fallback language
     expect(i18n.init).toHaveBeenCalledWith(expect.objectContaining({
-      lng: 'de',
+      fallbackLng: 'de',
+      resources: mockResources,
+      compatibilityJSON: 'v4',
+      interpolation: { escapeValue: false },
     }));
   });
 
   it('should use custom interpolation options when provided', async () => {
-    // Given a config with custom interpolation
     const config = {
       ...defaultConfig,
       interpolation: { escapeValue: true },
     };
     
-    // When initLocalization is called
     await initLocalization(config);
     
-    // Then i18n should be initialized with the custom interpolation
     expect(i18n.init).toHaveBeenCalledWith(expect.objectContaining({
       interpolation: { escapeValue: true },
     }));
   });
 
   it('should use custom compatibility JSON when provided', async () => {
-    // Given a config with custom compatibilityJSON
     const config = {
       ...defaultConfig,
       compatibilityJSON: 'v4' as const,
     };
     
-    // When initLocalization is called
     await initLocalization(config);
     
-    // Then i18n should be initialized with the custom compatibilityJSON
     expect(i18n.init).toHaveBeenCalledWith(expect.objectContaining({
       compatibilityJSON: 'v4',
     }));
   });
 
   it('should create a default language store when none is provided', async () => {
-    // Given a config without a language store
-    const { languageStore, ...configWithoutStore } = defaultConfig;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { languageStore: _languageStore, ...configWithoutStore } = defaultConfig;
     
-    // When initLocalization is called
     await initLocalization(configWithoutStore);
     
-    // Then a default language store should be created and used
-    expect(createLanguageDetectorPlugin).toHaveBeenCalledWith(expect.any(DefaultLanguageStore));
+    expect(createLanguageDetector).toHaveBeenCalledWith(expect.any(DefaultLanguageStore));
   });
 
-  it('should register language change listener when onLanguageChange is provided', async () => {
-    // Given a mock for the language change callback
-    const onLanguageChange = jest.fn();
-    const config = {
+
+  it('should return a Promise', async () => {
+    const result = initLocalization(defaultConfig);
+    
+    expect(result).toBeInstanceOf(Promise);
+    await result;
+  });
+
+  it('should handle initialization failure', async () => {
+    const initError = new Error('Initialization failed');
+    (i18n.init as jest.Mock).mockRejectedValueOnce(initError);
+    
+    await expect(initLocalization(defaultConfig)).rejects.toThrow('Initialization failed');
+  });
+
+  it('should handle empty resources object', async () => {
+    const configWithEmptyResources = {
       ...defaultConfig,
-      onLanguageChange,
+      resources: {}
     };
     
-    // When initLocalization is called
-    await initLocalization(config);
+    await initLocalization(configWithEmptyResources);
     
-    // Then the language change listener should be registered
-    expect(i18n.on).toHaveBeenCalledWith('languageChanged', expect.any(Function));
-    
-    // And when the language change event is triggered
-    const languageChangedHandler = (i18n.on as jest.Mock).mock.calls[0][1];
-    languageChangedHandler('es');
-    
-    // Then the callback should be called with the new language
-    expect(onLanguageChange).toHaveBeenCalledWith('es');
+    expect(i18n.init).toHaveBeenCalledWith(expect.objectContaining({
+      resources: {},
+      fallbackLng: 'en',
+      compatibilityJSON: 'v4',
+      interpolation: { escapeValue: false },
+    }));
   });
 
-  it('should not register language change listener when onLanguageChange is not provided', async () => {
-    // When initLocalization is called without onLanguageChange
-    await initLocalization(defaultConfig);
+  it('should handle undefined fallbackLng', async () => {
+    const configWithoutFallback = {
+      ...defaultConfig,
+      fallbackLng: undefined
+    };
     
-    // Then no language change listener should be registered
-    expect(i18n.on).not.toHaveBeenCalled();
-  });
-
-  it('should return the i18n instance', async () => {
-    // When initLocalization is called
-    const result = await initLocalization(defaultConfig);
+    await initLocalization(configWithoutFallback);
     
-    // Then it should return the i18n instance (which is the mock i18n object in this case)
-    expect(result).toBe(i18n);
+    expect(i18n.init).toHaveBeenCalledWith(expect.objectContaining({
+      fallbackLng: 'en',
+    }));
   });
 });

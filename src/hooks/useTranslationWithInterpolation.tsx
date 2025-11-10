@@ -4,7 +4,15 @@ import { Trans } from 'react-i18next';
 type Variables = { [key: string]: any };
 type Components = { [key: string]: ReactElement };
 
-const useTranslationWithInterpolation = (
+/**
+ * Hook for translation with component interpolation.
+ * 
+ * @param key - Translation key
+ * @param variables - Variables to inject into the translation
+ * @param components - React components to interpolate
+ * @returns JSX element with translated content and interpolated components
+ */
+export const useTranslationWithInterpolation = (
   key: string,
   variables: Variables = {},
   components: Components = {}
@@ -14,5 +22,3 @@ const useTranslationWithInterpolation = (
     [key, variables, components]
   );
 };
-
-export default useTranslationWithInterpolation;

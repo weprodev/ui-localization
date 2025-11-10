@@ -1,10 +1,25 @@
 import { Resource } from "i18next";
 
+/**
+ * Interface for language storage operations.
+ */
 export interface LanguageStore {
+  /**
+   * Gets the currently stored language.
+   * @returns The stored language code or null if none is stored
+   */
   getLanguage(): string | null;
+  
+  /**
+   * Sets the language to be stored.
+   * @param language - The language code to store
+   */
   setLanguage(language: string): void;
 }
 
+/**
+ * Configuration object for localization initialization.
+ */
 export interface LocalizationConfig {
   resources: Resource;
   fallbackLng?: string;
@@ -13,13 +28,4 @@ export interface LocalizationConfig {
     escapeValue?: boolean;
   };
   languageStore?: LanguageStore;
-  onLanguageChange?: (language: string) => void;
 }
-
-
-export type TranslationKeys<T> = {
-    [K in keyof T]: T[K] extends object ? TranslationKeys<T[K]> : string;
-  };
-  
-  export type Translation<T> = TranslationKeys<T>;
-  

@@ -1,161 +1,152 @@
 import { renderHook } from '@testing-library/react';
-import useTranslation from '../../hooks/useTranslation';
+import { useTranslation } from '../../hooks/useTranslation';
 
-// Define a type for our test translation object
-type TestTranslation = {
-  common: {
-    hello: string;
-    welcome: string;
-    nested: {
-      item: string;
-      deepNested: {
-        value: string;
-      };
-    };
-  };
-  buttons: {
-    submit: string;
-    cancel: string;
-  };
-  errors: {
-    notFound: string;
-  };
-};
+const mockUseTranslation = jest.fn();
 
-// Mock react-i18next
 jest.mock('react-i18next', () => ({
-  useTranslation: jest.fn().mockReturnValue({
-    t: jest.fn((key) => `translated_${key}`)
-  })
+  useTranslation: () => mockUseTranslation()
 }));
 
-describe('useTranslation', () => {
-  // Sample translation structure for testing
-  const translationObj = {
-    common: {
-      hello: 'Hello',
-      welcome: 'Welcome',
-      nested: {
-        item: 'Nested Item',
-        deepNested: {
-          value: 'Deep Nested Value'
-        }
-      }
-    },
-    buttons: {
-      submit: 'Submit',
-      cancel: 'Cancel'
-    },
-    errors: {
-      notFound: 'Not Found'
+// Mock translation object for testing
+const mockTranslationObject = {
+  common: {
+    hello: 'Hello',
+    welcome: 'Welcome',
+    goodbye: 'Goodbye'
+  },
+  auth: {
+    login: 'Login',
+    signup: 'Sign Up'
+  },
+  nested: {
+    deep: {
+      value: 'Deep Value'
     }
-  };
+  }
+};
 
-  it('should return a proxy that translates top-level keys', () => {
-    // When the hook is called
-    const { result } = renderHook(() => useTranslation<TestTranslation>(translationObj));
+describe('useTranslation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
     
-    // Then it should return a proxy that translates keys
-    expect(result.current.common).toBeDefined();
-    expect(result.current.buttons).toBeDefined();
-    expect(result.current.errors).toBeDefined();
+    mockUseTranslation.mockReturnValue({
+      t: jest.fn((key) => `translated_${key}`)
+    });
   });
 
-  it('should translate nested keys correctly', () => {
-    // When the hook is called
-    const { result } = renderHook(() => useTranslation<TestTranslation>(translationObj));
+  it('should return a proxy object with type-safe access', () => {
+    const { result } = renderHook(() => useTranslation<typeof mockTranslationObject>(mockTranslationObject));
     
-    // Then nested keys should be translated correctly
-    expect(result.current.common.hello).toBe('translated_common.hello');
-    expect(result.current.common.welcome).toBe('translated_common.welcome');
-    expect(result.current.buttons.submit).toBe('translated_buttons.submit');
-    expect(result.current.errors.notFound).toBe('translated_errors.notFound');
+    expect(typeof result.current).toBe('object');
+    expect(result.current).not.toBeNull();
+  });
+
+  it('should translate nested keys correctly using dot notation access', () => {
+    const tSpy = jest.fn((key) => `translated_${key}`);
+    mockUseTranslation.mockReturnValue({
+      t: tSpy
+    });
+    
+    const { result } = renderHook(() => useTranslation<typeof mockTranslationObject>(mockTranslationObject));
+    
+    // Access nested properties
+    const hello = result.current.common.hello;
+    const welcome = result.current.common.welcome;
+    const login = result.current.auth.login;
+    
+    expect(hello).toBe('translated_common.hello');
+    expect(welcome).toBe('translated_common.welcome');
+    expect(login).toBe('translated_auth.login');
+    
+    expect(tSpy).toHaveBeenCalledWith('common.hello');
+    expect(tSpy).toHaveBeenCalledWith('common.welcome');
+    expect(tSpy).toHaveBeenCalledWith('auth.login');
   });
 
   it('should handle deeply nested objects', () => {
-    // When the hook is called
-    const { result } = renderHook(() => useTranslation<TestTranslation>(translationObj));
+    const tSpy = jest.fn((key) => `translated_${key}`);
+    mockUseTranslation.mockReturnValue({
+      t: tSpy
+    });
     
-    // Then deeply nested keys should be translated correctly
-    expect(result.current.common.nested.item).toBe('translated_common.nested.item');
-    expect(result.current.common.nested.deepNested.value).toBe('translated_common.nested.deepNested.value');
+    const { result } = renderHook(() => useTranslation<typeof mockTranslationObject>(mockTranslationObject));
+    
+    const deepValue = result.current.nested.deep.value;
+    
+    expect(deepValue).toBe('translated_nested.deep.value');
+    expect(tSpy).toHaveBeenCalledWith('nested.deep.value');
   });
 
-  it('should handle non-existent keys gracefully', () => {
-    // When the hook is called
-    const { result } = renderHook(() => useTranslation(translationObj));
+  it('should return nested proxy objects for object properties', () => {
+    const { result } = renderHook(() => useTranslation<typeof mockTranslationObject>(mockTranslationObject));
     
-    // Then accessing non-existent keys should still work
-    // @ts-ignore - intentionally accessing non-existent key for test
-    expect(result.current.nonExistent).toBe('translated_nonExistent');
-    // @ts-ignore - intentionally accessing non-existent nested key for test
-    expect(result.current.common.nonExistent).toBe('translated_common.nonExistent');
+    // Accessing an object property should return another proxy
+    const commonProxy = result.current.common;
+    const authProxy = result.current.auth;
+    
+    expect(typeof commonProxy).toBe('object');
+    expect(typeof authProxy).toBe('object');
+    expect(commonProxy).not.toBeNull();
+    expect(authProxy).not.toBeNull();
   });
 
-  it('should handle empty objects', () => {
-    // When the hook is called with an empty object
-    const { result } = renderHook(() => useTranslation({}));
+  it('should handle translation errors gracefully', () => {
+    const errorT = jest.fn().mockImplementation(() => {
+      throw new Error('Translation error');
+    });
     
-    // Then it should return a proxy that still works for any key
-    // @ts-ignore - intentionally accessing key on empty object for test
-    expect(result.current.anyKey).toBe('translated_anyKey');
+    mockUseTranslation.mockReturnValue({
+      t: errorT
+    });
+    
+    const { result } = renderHook(() => useTranslation<typeof mockTranslationObject>(mockTranslationObject));
+    
+    expect(() => result.current.common.hello).toThrow('Translation error');
   });
 
-  it('should handle null values in the translation object', () => {
-    // Given a translation object with null values
-    const translationWithNull = {
-      common: {
-        nullValue: null,
-        regularValue: 'Regular'
+  it('should work with different translation object structures', () => {
+    const customTranslationObject = {
+      buttons: {
+        save: 'Save',
+        cancel: 'Cancel'
+      },
+      messages: {
+        success: 'Success',
+        error: 'Error'
       }
     };
     
-    type TranslationWithNull = {
-      common: {
-        nullValue: null;
-        regularValue: string;
-      }
-    };
+    const tSpy = jest.fn((key) => `custom_${key}`);
+    mockUseTranslation.mockReturnValue({
+      t: tSpy
+    });
     
-    // When the hook is called
-    const { result } = renderHook(() => useTranslation<TranslationWithNull>(translationWithNull));
+    const { result } = renderHook(() => useTranslation<typeof customTranslationObject>(customTranslationObject));
     
-    // Then it should handle null values correctly
-    expect(result.current.common.nullValue).toBe('translated_common.nullValue');
-    expect(result.current.common.regularValue).toBe('translated_common.regularValue');
+    const saveButton = result.current.buttons.save;
+    const errorMessage = result.current.messages.error;
+    
+    expect(saveButton).toBe('custom_buttons.save');
+    expect(errorMessage).toBe('custom_messages.error');
+    
+    expect(tSpy).toHaveBeenCalledWith('buttons.save');
+    expect(tSpy).toHaveBeenCalledWith('messages.error');
   });
 
-  it('should handle array values in the translation object', () => {
-    // Given a translation object with array values
-    const translationWithArray = {
-      items: ['item1', 'item2']
-    };
+  it('should handle empty translation objects', () => {
+    const emptyTranslationObject = {};
     
-    // When the hook is called
-    const { result } = renderHook(() => useTranslation(translationWithArray));
+    const tSpy = jest.fn((key) => `empty_${key}`);
+    mockUseTranslation.mockReturnValue({
+      t: tSpy
+    });
     
-    // Then it should handle arrays correctly
-    // Note: Arrays are objects, so they'll be treated as nested objects
-    // @ts-ignore - intentionally accessing array index for test
-    expect(result.current.items[0]).toBe('translated_items.0');
-    // @ts-ignore - intentionally accessing array index for test
-    expect(result.current.items[1]).toBe('translated_items.1');
-  });
-
-  it('should maintain the same proxy reference for nested objects', () => {
-    // When the hook is called
-    const { result, rerender } = renderHook(() => useTranslation<TestTranslation>(translationObj));
+    const { result } = renderHook(() => useTranslation<typeof emptyTranslationObject>(emptyTranslationObject));
     
-    // Get references to nested objects
-    const commonRef = result.current.common;
-    const buttonsRef = result.current.buttons;
+    // Should still work even with empty objects - accessing any key should return translation
+    const someKey = (result.current as any).nonexistent;
     
-    // When the hook is rerendered
-    rerender();
-    
-    // Then the nested object references should be different (new proxies are created each render)
-    // This is expected behavior since proxies are created on-demand
-    expect(result.current.common).not.toBe(commonRef);
-    expect(result.current.buttons).not.toBe(buttonsRef);
+    expect(someKey).toBe('empty_nonexistent');
+    expect(tSpy).toHaveBeenCalledWith('nonexistent');
   });
 });

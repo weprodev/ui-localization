@@ -1,6 +1,6 @@
 {
-  "name": "@weprodev/wpd-pkg-localization",
-  "version": "1.0.4",
+  "name": "@weprodev/ui-localization",
+  "version": "1.0.0",
   "description": "Localization package for React and React Native applications",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -15,7 +15,7 @@
     "wpd-translation-sync": "./bin/wpd-translation-sync.js"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "rollup -c",
@@ -28,7 +28,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/weprodev/wpd-pkg-localization.git"
+    "url": "git+https://github.com/weprodev/ui-localization.git"
   },
   "keywords": [
     "i18n",
@@ -40,9 +40,9 @@
   "author": "WeProDev",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/weprodev/wpd-pkg-localization/issues"
+    "url": "https://github.com/weprodev/ui-localization/issues"
   },
-  "homepage": "https://github.com/weprodev/wpd-pkg-localization#readme",
+  "homepage": "https://github.com/weprodev/ui-localization#readme",
   "peerDependencies": {
     "react": ">=16.8.0"
   },

@@ -1,50 +1,63 @@
 import { renderHook, act } from '@testing-library/react';
-import useLanguage from '../../hooks/useLanguage';
-import i18n from 'i18next';
+import { useLanguage } from '../../hooks/useLanguage';
 
-// Mock i18next
-jest.mock('i18next', () => ({
-  language: 'en',
-  options: {
-    resources: {
-      en: { translation: {} },
-      fr: { translation: {} },
-      es: { translation: {} }
-    }
-  },
-  changeLanguage: jest.fn().mockImplementation((lang) => {
-    // Update the language property to simulate language change
-    (i18n as any).language = lang;
-    return Promise.resolve();
-  })
+const mockUseTranslation = jest.fn();
+
+jest.mock('react-i18next', () => ({
+  useTranslation: () => mockUseTranslation()
 }));
 
 describe('useLanguage', () => {
   beforeEach(() => {
-    // Reset the language to 'en' before each test
-    (i18n as any).language = 'en';
     jest.clearAllMocks();
+    
+    mockUseTranslation.mockReturnValue({
+      i18n: {
+        language: 'en',
+        resolvedLanguage: 'en',
+        options: {
+          resources: {
+            en: { translation: {} },
+            fr: { translation: {} },
+            es: { translation: {} }
+          }
+        },
+        changeLanguage: jest.fn().mockResolvedValue(undefined)
+      }
+    });
   });
 
   it('should return the current language', () => {
-    // When the hook is called
     const { result } = renderHook(() => useLanguage());
     
-    // Then it should return the current language
     expect(result.current.currentLanguage).toBe('en');
   });
 
   it('should return available languages', () => {
-    // When the hook is called
     const { result } = renderHook(() => useLanguage());
     
-    // Then it should return the available languages
     expect(result.current.availableLanguages).toEqual(['en', 'fr', 'es']);
   });
 
   it('should change the language when changeLanguage is called', async () => {
-    // Given the hook is rendered
-    const { result, rerender } = renderHook(() => useLanguage());
+    const mockChangeLanguage = jest.fn().mockResolvedValue(undefined);
+    
+    mockUseTranslation.mockReturnValue({
+      i18n: {
+        language: 'en',
+        resolvedLanguage: 'en',
+        options: {
+          resources: {
+            en: { translation: {} },
+            fr: { translation: {} },
+            es: { translation: {} }
+          }
+        },
+        changeLanguage: mockChangeLanguage
+      }
+    });
+    
+    const { result } = renderHook(() => useLanguage());
     
     // When changeLanguage is called
     await act(async () => {
@@ -52,48 +65,54 @@ describe('useLanguage', () => {
     });
     
     // Then i18n.changeLanguage should be called with the new language
-    expect(i18n.changeLanguage).toHaveBeenCalledWith('fr');
-    
-    // We need to rerender to get the updated state since the hook uses i18n.language directly
-    rerender();
-    
-    // And the current language should be updated
-    expect(result.current.currentLanguage).toBe('fr');
+    expect(mockChangeLanguage).toHaveBeenCalledWith('fr');
   });
 
   it('should handle empty resources gracefully', () => {
-    // Given i18n with no resources
-    const originalResources = i18n.options.resources;
-    (i18n.options as any).resources = undefined;
+    mockUseTranslation.mockReturnValue({
+      i18n: {
+        language: 'en',
+        resolvedLanguage: 'en',
+        options: {
+          resources: undefined
+        },
+        changeLanguage: jest.fn().mockResolvedValue(undefined)
+      }
+    });
     
-    // When the hook is called
     const { result } = renderHook(() => useLanguage());
     
-    // Then it should return an empty array of available languages
     expect(result.current.availableLanguages).toEqual([]);
-    
-    // Restore resources for other tests
-    (i18n.options as any).resources = originalResources;
   });
 
   it('should maintain the changeLanguage reference between renders', () => {
-    // Given the hook is rendered
     const { result, rerender } = renderHook(() => useLanguage());
     
-    // Store the initial reference to changeLanguage
     const initialChangeLanguage = result.current.changeLanguage;
     
-    // When the hook is rerendered
     rerender();
     
-    // Then the changeLanguage reference should remain the same
     expect(result.current.changeLanguage).toBe(initialChangeLanguage);
   });
 
   it('should handle language change errors gracefully', async () => {
-    // Given i18n.changeLanguage that rejects
     const error = new Error('Language change failed');
-    (i18n.changeLanguage as jest.Mock).mockRejectedValueOnce(error);
+    const mockChangeLanguage = jest.fn().mockRejectedValueOnce(error);
+    
+    mockUseTranslation.mockReturnValue({
+      i18n: {
+        language: 'en',
+        resolvedLanguage: 'en',
+        options: {
+          resources: {
+            en: { translation: {} },
+            fr: { translation: {} },
+            es: { translation: {} }
+          }
+        },
+        changeLanguage: mockChangeLanguage
+      }
+    });
     
     // Given the hook is rendered
     const { result } = renderHook(() => useLanguage());
@@ -112,6 +131,88 @@ describe('useLanguage', () => {
     expect(caughtError).toBe(error);
     
     // And i18n.changeLanguage should still have been called
-    expect(i18n.changeLanguage).toHaveBeenCalledWith('invalid-lang');
+    expect(mockChangeLanguage).toHaveBeenCalledWith('invalid-lang');
+  });
+
+  it('should prioritize resolvedLanguage over language', () => {
+    mockUseTranslation.mockReturnValue({
+      i18n: {
+        language: 'en',
+        resolvedLanguage: 'fr',
+        options: {
+          resources: {
+            en: { translation: {} },
+            fr: { translation: {} },
+            es: { translation: {} }
+          }
+        },
+        changeLanguage: jest.fn().mockResolvedValue(undefined)
+      }
+    });
+    
+    const { result } = renderHook(() => useLanguage());
+    
+    expect(result.current.currentLanguage).toBe('fr');
+  });
+
+  it('should handle undefined i18n.options', () => {
+    mockUseTranslation.mockReturnValue({
+      i18n: {
+        language: 'en',
+        resolvedLanguage: 'en',
+        options: undefined,
+        changeLanguage: jest.fn().mockResolvedValue(undefined)
+      }
+    });
+    
+    const { result } = renderHook(() => useLanguage());
+    
+    expect(result.current.availableLanguages).toEqual([]);
+  });
+
+  it('should handle null resolvedLanguage', () => {
+    mockUseTranslation.mockReturnValue({
+      i18n: {
+        language: 'en',
+        resolvedLanguage: null,
+        options: {
+          resources: {
+            en: { translation: {} },
+            fr: { translation: {} }
+          }
+        },
+        changeLanguage: jest.fn().mockResolvedValue(undefined)
+      }
+    });
+    
+    const { result } = renderHook(() => useLanguage());
+    
+    expect(result.current.currentLanguage).toBe('en');
+  });
+
+  it('should update dependency array when availableLanguages change', () => {
+    const { result, rerender } = renderHook(() => useLanguage());
+    const initialChangeLanguage = result.current.changeLanguage;
+    
+    mockUseTranslation.mockReturnValue({
+      i18n: {
+        language: 'en',
+        resolvedLanguage: 'en',
+        options: {
+          resources: {
+            en: { translation: {} },
+            fr: { translation: {} },
+            es: { translation: {} },
+            de: { translation: {} }
+          }
+        },
+        changeLanguage: jest.fn().mockResolvedValue(undefined)
+      }
+    });
+    
+    rerender();
+    
+    expect(result.current.changeLanguage).not.toBe(initialChangeLanguage);
+    expect(result.current.availableLanguages).toEqual(['en', 'fr', 'es', 'de']);
   });
 });

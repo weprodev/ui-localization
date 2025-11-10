@@ -1,26 +1,22 @@
-import { LanguageStore } from './types';
+import { LanguageDetectorModule } from "i18next";
+import { LanguageStore } from "./types";
 
-export const createLanguageDetectorPlugin = (languageStore: LanguageStore) => ({
-  type: 'languageDetector' as const,
-  async: false,
-  init: () => {},
-  detect(callback: (lang: string) => void) {
+export const createLanguageDetector = (
+  languageStore: LanguageStore
+): LanguageDetectorModule => ({
+  type: "languageDetector",
+  detect() {
     try {
-      const language = languageStore.getLanguage();
-      if (language) {
-        return callback(language);
-      } else {
-        return callback('en');
-      }
-    } catch (error) {
-      // Silent error handling - return default language
-      return callback('en');
+      return languageStore.getLanguage() || undefined;
+    } catch {
+      // Silent error handling - ignore storage errors
+      return undefined
     }
   },
   cacheUserLanguage(language: string) {
     try {
       languageStore.setLanguage(language);
-    } catch (error) {
+    } catch {
       // Silent error handling - ignore storage errors
     }
   },
