@@ -6,12 +6,12 @@ A lightweight, professional localization package for React and React Native appl
 
 - 🌐 **Simple React Hooks** - Clean, intuitive hooks for translations and language management
 - 🔄 **Language Switching** - Built-in language switching with persistence
-- 📝 **Variable Injection** - Dynamic content insertion in translations
-- 🧩 **Component Interpolation** - Embed React components within translations
+- 📝 **Type-Safe Variable Injection** - Dynamic content insertion with compile-time parameter validation
+- 🧩 **Unified Component Interpolation** - Embed React components within translations using the same `t` function
 - 🔍 **Translation Validation** - CLI tools to ensure translation consistency
 - 🔄 **Translation Sync** - Automated synchronization of translation files
 - 📱 **React Native Support** - Full compatibility with React Native applications
-- 🛡️ **Type Safety** - Full TypeScript support with comprehensive type definitions
+- 🛡️ **Full Type Safety** - TypeScript support with type-safe keys, parameters, and component interpolation
 - ⚡ **Performance Optimized** - Lightweight wrapper with minimal overhead
 
 ## 📦 Installation
@@ -26,27 +26,29 @@ npm install @weprodev/ui-localization
 
 #### 1. Create Translation Files
 
-Create a `translations` directory in your project with language files:
+Create a `translations` directory in your project with language files. **Important:** Use `as const` to enable type-safe parameter validation:
 
 ```typescript
 // translations/en.ts
 const en = {
   common: {
-    hello: "Hello",
-    welcome: "Welcome to our app",
-    goodbye: "Goodbye"
+    hello: "Hello {{name}}!",
+    welcome: "Welcome {{name}}!",
+    goodbye: "Goodbye {{name}}!",
+    greeting: "Hello, {{name}}!"
   },
   auth: {
     login: "Login",
     signup: "Sign Up",
-    forgotPassword: "Forgot Password"
+    forgotPassword: "Forgot Password",
+    welcomeMessage: "Welcome <strong>{{name}}</strong>! Please <link>sign in</link> to continue."
   },
   dashboard: {
     title: "Dashboard",
     summary: "Summary",
     recentActivity: "Recent Activity"
   }
-};
+} as const;
 
 export default en;
 ```
@@ -55,21 +57,23 @@ export default en;
 // translations/es.ts
 const es = {
   common: {
-    hello: "Hola",
-    welcome: "Bienvenido a nuestra aplicación",
-    goodbye: "Adiós"
+    hello: "Hola {{name}}!",
+    welcome: "Bienvenido {{name}}!",
+    goodbye: "Adiós {{name}}!",
+    greeting: "¡Hola, {{name}}!"
   },
   auth: {
     login: "Iniciar sesión",
     signup: "Registrarse",
-    forgotPassword: "Contraseña olvidada"
+    forgotPassword: "Contraseña olvidada",
+    welcomeMessage: "Bienvenido <strong>{{name}}</strong>! Por favor <link>inicia sesión</link> para continuar."
   },
   dashboard: {
     title: "Panel de control",
     summary: "Resumen",
     recentActivity: "Actividad reciente"
   }
-};
+} as const;
 
 export default es;
 ```
@@ -133,14 +137,17 @@ import React from 'react';
 import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
-const Welcome: React.FC = () => {
-  // Type-safe translation hook with intellisense
-  const t = useTranslation<typeof en>(en);
+const Welcome: React.FC<{ name: string }> = ({ name }) => {
+  // Type-safe translation hook with path-based keys
+  const { t } = useTranslation<typeof en>();
   
   return (
     <div>
-      <h1>{t.common.welcome}</h1>
-      <p>{t.common.hello}</p>
+      {/* TypeScript requires 'name' parameter because translation has {{name}} placeholder */}
+      <h1>{t('common.welcome', { name })}</h1>
+      <p>{t('common.hello', { name })}</p>
+      {/* TypeScript will error if you use invalid keys like t('common.invalid') */}
+      {/* TypeScript will error if you forget required parameters */}
     </div>
   );
 };
@@ -156,25 +163,28 @@ import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
 export const useAppTranslation = () => {
-  return useTranslation<typeof en>(en);
+  return useTranslation<typeof en>();
 };
 
 // Usage in components
 import { useAppTranslation } from '../hooks/useAppTranslation';
 
 const Welcome: React.FC = () => {
-  const t = useAppTranslation();
+  const { t } = useAppTranslation();
   
   return (
     <div>
-      <h1>{t.common.welcome}</h1> {/* Full intellisense support */}
-      <p>{t.common.hello}</p>
+      <h1>{t('common.welcome')}</h1> {/* Full intellisense and type safety */}
+      <p>{t('common.hello')}</p>
+      {/* t('common.invalid') will show TypeScript error */}
     </div>
   );
 };
 ```
 
-**Troubleshooting: If you encounter TypeScript errors with the type-safe hook, you can use `useTranslationFallback()` as an escape hatch. See the API Reference for details.**
+**Important:** For type-safe parameter validation to work, your translation files must use `as const`. This ensures TypeScript preserves literal string types, allowing the system to extract parameter names from placeholders like `{{name}}`.
+
+**Troubleshooting:** If you encounter TypeScript errors with the type-safe hook, you can use `useTranslationFallback()` as an escape hatch. See the API Reference for details.
 
 #### 5. Language Switching
 
@@ -292,14 +302,14 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
-const Welcome: React.FC = () => {
-  // Type-safe translation hook with intellisense
-  const t = useTranslation<typeof en>(en);
+const Welcome: React.FC<{ name: string }> = ({ name }) => {
+  // Type-safe translation hook with path-based keys
+  const { t } = useTranslation<typeof en>();
   
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t.common.welcome}</Text>
-      <Text style={styles.subtitle}>{t.common.hello}</Text>
+      <Text style={styles.title}>{t('common.welcome', { name })}</Text>
+      <Text style={styles.subtitle}>{t('common.hello', { name })}</Text>
     </View>
   );
 };
@@ -400,43 +410,70 @@ export default LanguageSwitcher;
 
 ## 🔧 Advanced Usage
 
-### Translation with Variables
+### Translation with Variables (Type-Safe Parameters)
+
+The `t` function enforces type-safe parameters based on placeholders in your translation strings. Parameters are **required** when placeholders exist, and **optional** when they don't.
 
 ```typescript
-import { useTranslation, useTranslationInjection } from '@weprodev/ui-localization';
+import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
 const Greeting: React.FC<{ name: string }> = ({ name }) => {
-  const t = useTranslation<typeof en>(en);
+  const { t } = useTranslation<typeof en>();
   
-  // Translation key: "greeting": "Hello, {{name}}!"
-  const greeting = useTranslationInjection(t.common.greeting, { name });
+  // Translation: "common.greeting": "Hello, {{name}}!"
+  // ✅ TypeScript requires the 'name' parameter
+  const greeting = t('common.greeting', { name });
+  
+  // ❌ TypeScript error: missing required parameter 'name'
+  // const greeting = t('common.greeting');
+  
+  // ❌ TypeScript error: wrong parameter name
+  // const greeting = t('common.greeting', { wrongName: name });
+  
+  // ✅ No parameters needed for translations without placeholders
+  const title = t('dashboard.title');
   
   return <p>{greeting}</p>;
 };
 ```
 
-### Translation with Components
+### Translation with Component Interpolation
+
+The unified `t` function supports both string and component interpolation. When you pass a `components` object as the third argument, it returns a React element instead of a string.
 
 ```typescript
-import { useTranslation, useTranslationWithInterpolation } from '@weprodev/ui-localization';
+import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
-const TermsAgreement: React.FC<{ name: string }> = ({ name }) => {
-  const t = useTranslation<typeof en>(en);
+const WelcomeMessage: React.FC<{ name: string }> = ({ name }) => {
+  const { t } = useTranslation<typeof en>();
   
-  // Translation key: "welcome": "Welcome <strong>{{name}}</strong>"
-  const welcomeElement = useTranslationWithInterpolation(
-    t.common.welcome, 
-    { name }, 
+  // Translation: "auth.welcomeMessage": "Welcome <strong>{{name}}</strong>! Please <link>sign in</link> to continue."
+  // The translation string must contain matching HTML-like tags (<strong>, <link>, etc.)
+  const welcomeElement = t(
+    'auth.welcomeMessage',
+    { name },
     {
-      strong: <strong style={{ color: "red" }} />
+      strong: <strong className="highlight" />,
+      link: (props: { children?: React.ReactNode }) => (
+        <a href="#login" className="link-button">
+          {props.children}
+        </a>
+      )
     }
   );
   
+  // Returns JSX.Element when components are provided
   return <div>{welcomeElement}</div>;
 };
 ```
+
+**Important Notes:**
+- Component interpolation only works when the translation string contains matching HTML-like tags (e.g., `<strong>`, `<link>`)
+- The component keys in your `components` object must match the tag names in the translation
+- For self-closing tags like `<strong />`, use self-closing components
+- For tags with content like `<link>text</link>`, use function components that accept `props.children`
 
 
 ## 🛠️ Translation Management Tools
@@ -516,20 +553,47 @@ We recommend running `translation:validate` as part of your CI pipeline to ensur
 
 ### Hooks
 
-#### `useTranslation<T>(translationLanguage: object)`
-Returns a type-safe translation proxy object with intellisense support.
+#### `useTranslation<T>()`
+Returns a type-safe translation function with intellisense support and type-safe parameter validation.
 
 **Parameters:**
-- `translationLanguage`: The translation object to provide type safety for
+- None (the translation object type `T` is provided as a generic parameter for type safety)
 
-**Returns:** Type-safe translation proxy object
+**Returns:** Object with `t` function that accepts type-safe translation keys
 
+**The `t` function supports two modes:**
+
+1. **String interpolation** (returns `string`):
 ```typescript
 import en from '../translations/en';
 
-const t = useTranslation<typeof en>(en);
-const translatedText = t.common.hello; // Type-safe with intellisense
+const { t } = useTranslation<typeof en>();
+
+// No parameters needed for translations without placeholders
+const title = t('dashboard.title'); // ✅ Returns string
+
+// Parameters required when placeholders exist
+const greeting = t('common.greeting', { name: 'John' }); // ✅ Returns string
+const greeting = t('common.greeting'); // ❌ TypeScript error: missing required parameter
 ```
+
+2. **Component interpolation** (returns `JSX.Element`):
+```typescript
+// Pass components as third argument
+const welcomeElement = t(
+  'auth.welcomeMessage',
+  { name: 'Alice' },
+  {
+    strong: <strong className="highlight" />,
+    link: (props) => <a href="#login">{props.children}</a>
+  }
+); // ✅ Returns JSX.Element
+```
+
+**Type-Safe Parameters:**
+- Parameters are **required** when the translation string contains placeholders like `{{name}}`
+- Parameters are **optional** when the translation has no placeholders
+- TypeScript validates parameter names match the placeholders in the translation
 
 **Note:** For better reusability, consider creating a custom hook:
 
@@ -539,8 +603,12 @@ import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
 export const useAppTranslation = () => {
-  return useTranslation<typeof en>(en);
+  return useTranslation<typeof en>();
 };
+
+// Usage
+const { t } = useAppTranslation();
+const text = t('common.welcome', { name: 'User' }); // Full type safety and intellisense
 ```
 
 #### `useLanguage()`
@@ -563,24 +631,6 @@ const withVars = t('greeting', { name: 'John' });
 ```
 
 **Note:** The main `useTranslation` hook should be preferred in 99% of cases.
-
-#### `useTranslationInjection(key, variables)`
-Injects variables into translation strings.
-
-```typescript
-const result = useTranslationInjection('greeting', { name: 'John' });
-```
-
-#### `useTranslationWithInterpolation(key, variables, components)`
-Interpolates React components into translations.
-
-```typescript
-const element = useTranslationWithInterpolation(
-  'welcome', 
-  { name: 'John' }, 
-  { strong: <strong /> }
-);
-```
 
 ### Core Functions
 
@@ -619,6 +669,17 @@ interface LocalizationConfig {
     escapeValue?: boolean;
   };
   languageStore?: LanguageStore;
+}
+```
+
+#### `ComponentMap`
+Type for component interpolation map. Supports both React elements and function components.
+
+```typescript
+type ComponentMap = {
+  [key: string]: 
+    | React.ReactElement
+    | ((props: { children?: React.ReactNode; [key: string]: any }) => React.ReactElement)
 }
 ```
 
