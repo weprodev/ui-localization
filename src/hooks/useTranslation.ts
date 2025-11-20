@@ -1,65 +1,36 @@
-import { useTranslation as useTranslationI18next } from 'react-i18next';
+import React from 'react'
+import { useTranslation as useTranslationI18next, Trans } from 'react-i18next'
+import { Path, TranslateFunction, NestedRecord, ComponentMap } from '../core/types'
 
 /**
- * Type utility that recursively maps translation object structure to provide type safety.
- * Converts nested objects to the same structure but with string values for leaf nodes.
+ * Return type for useTranslation hook with type-safe t function
  */
-type TranslationKeys<T> = {
-  [K in keyof T]: T[K] extends object ? TranslationKeys<T[K]> : string;
-};
+export interface UseTranslationReturn<T extends NestedRecord> {
+  t: TranslateFunction<T>
+}
 
-/**
- * Type alias for translation structure with type safety.
- */
-type Translation<T> = TranslationKeys<T>;
+export const useTranslation = <T extends NestedRecord>(): UseTranslationReturn<T> => {
+  const { t: tI18next } = useTranslationI18next()
 
-/**
- * Type-safe translation hook that provides intellisense and type checking for translation keys.
- * 
- * @template T - The type of the translation object structure
- * @param translationLanguage - The translation object to provide type safety for
- * @returns Type-safe translation proxy object
- * 
- * @example
- * ```typescript
- * import en from '../translations/en';
- * 
- * const t = useTranslation<typeof en>(en);
- * const welcome = t.common.welcome; // Type-safe access with intellisense
- * ```
- */
-export const useTranslation = <T>(
-  translationLanguage: object
-): Translation<T> => {
-  const { t } = useTranslationI18next();
+  const t = (<K extends Path<T> & string>(key: K, ...args: any[]): string | React.JSX.Element => {
+    const params = args[0] as Record<string, string | number> | undefined
+    const components = args[1] as ComponentMap | undefined
 
-  const createTranslationProxy = (prefix = ''): any => {
-    return new Proxy(
-      {},
-      {
-        get(_target, prop: string) {
-          const key = prefix ? `${prefix}.${prop}` : prop;
+    // If components are provided, use Trans component for interpolation
+    if (components !== undefined) {
+      return React.createElement(Trans, {
+        i18nKey: key,
+        values: params,
+        components: components as { [tagName: string]: React.ReactElement },
+      })
+    }
 
-          // Check if this key exists in the original structure
-          const originalValue = prefix
-            ? prefix
-                .split('.')
-                .reduce((obj, k) => obj?.[k], translationLanguage as any)?.[
-                prop
-              ]
-            : (translationLanguage as any)[prop];
+    // Otherwise, use regular translation
+    const result = tI18next(key, params)
+    return typeof result === 'string' ? result : String(result)
+  }) as TranslateFunction<T>
 
-          if (typeof originalValue === 'object' && originalValue !== null) {
-            // Return a new proxy for nested objects
-            return createTranslationProxy(key);
-          } else {
-            // For leaf nodes or non-existent keys, return the translated string
-            return t(key);
-          }
-        },
-      }
-    );
-  };
-
-  return createTranslationProxy() as Translation<T>;
-};
+  return {
+    t,
+  }
+}
