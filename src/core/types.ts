@@ -125,15 +125,21 @@ export type PathValue<T, P extends string> = P extends `${infer Key}.${infer Res
  * // Result: {}
  * ```
  */
-type ExtractParams<S extends string, Prefix extends string = '{{', Suffix extends string = '}}'> = S extends `${string}${Prefix}${infer Param}${Suffix}${infer Rest}`
+type RecursiveExtractParams<S extends string, Prefix extends string = '{{', Suffix extends string = '}}'> = S extends `${string}${Prefix}${infer Param}${Suffix}${infer Rest}`
   ? Param extends `${infer ParamName}`
     ? ParamName extends ''
-      ? ExtractParams<Rest, Prefix, Suffix>
+      ? RecursiveExtractParams<Rest, Prefix, Suffix>
       : {
           [K in ParamName]: string | number
-        } & ExtractParams<Rest, Prefix, Suffix>
-    : ExtractParams<Rest, Prefix, Suffix>
-  : {}
+        } & RecursiveExtractParams<Rest, Prefix, Suffix>
+    : RecursiveExtractParams<Rest, Prefix, Suffix>
+  : unknown
+
+type ExtractParams<S extends string, Prefix extends string = '{{', Suffix extends string = '}}'> = RecursiveExtractParams<S, Prefix, Suffix> extends infer R
+  ? keyof R extends never
+    ? Record<string, never>
+    : R
+  : never
 
 /**
  * Type for React component interpolation map
