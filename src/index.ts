@@ -1,4 +1,4 @@
-export type { LanguageStore, LocalizationConfig, Path, PathValue, TranslateFunction, NestedRecord, Primitive } from './core/types'
+export type { LanguageStore, LocalizationConfig, TranslateFunction, NestedRecord } from './core/types'
 export { initLocalization } from './core/initLocalization'
 
 export { useLanguage } from './hooks/useLanguage'
