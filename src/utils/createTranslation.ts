@@ -3,7 +3,33 @@ import i18n from 'i18next'
 import { Trans } from 'react-i18next'
 import { TranslateFunction, NestedRecord, Path, ComponentMap } from '../core/types'
 
-export const createTranslation = <T extends NestedRecord>(_translationLanguage: T): TranslateFunction<T> => {
+/**
+ * Creates a type-safe translation function for outside of React components usage.
+ * useful for utility functions, non-component files, etc.
+ *
+ * @template T - The translation object type
+ * @returns A type-safe translation function
+ *
+ * @example
+ * ```typescript
+ * import { createTranslation } from 'ui-localization';
+ * import type { TranslationType } from './types';
+ *
+ * const t = createTranslation<TranslationType>();
+ *
+ * // Basic usage
+ * const greeting = t('common.hello');
+ *
+ * // With parameters
+ * const message = t('common.welcome', { name: 'World' });
+ *
+ * // With components (returns React Element, useful for localized constants)
+ * const content = t('common.info', undefined, {
+ *   link: <a href="/more">More</a>
+ * });
+ * ```
+ */
+export const createTranslation = <T extends NestedRecord>(): TranslateFunction<T> => {
   const t = (<K extends Path<T> & string>(key: K, ...args: any[]): string | React.JSX.Element => {
     const params = args[0] as Record<string, string | number> | undefined
     const components = args[1] as ComponentMap | undefined
