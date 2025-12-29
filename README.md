@@ -476,6 +476,31 @@ const WelcomeMessage: React.FC<{ name: string }> = ({ name }) => {
 - For tags with content like `<link>text</link>`, use function components that accept `props.children`
 
 
+### Usage Outside React Components
+
+For utility functions or other non-component files where hooks are not available, you can use `createTranslation` to get a type-safe `t` function.
+
+```typescript
+import { createTranslation } from '@weprodev/ui-localization';
+import en from '../translations/en';
+
+// Create a standalone translation function
+const t = createTranslation<typeof en>();
+
+// Basic usage - Returns string
+const greeting = t('common.hello');
+
+// With parameters - Returns string
+const message = t('common.welcome', { name: 'World' });
+
+// With components - Returns JSX.Element
+// Useful for creating localized constants with React elements
+const content = t('common.info', undefined, {
+  link: <a href="/more">More</a>
+});
+```
+
+
 ## 🛠️ Translation Management Tools
 
 The package includes powerful CLI tools to help manage your translations. You can use these tools in multiple ways:
@@ -681,6 +706,31 @@ type ComponentMap = {
     | React.ReactElement
     | ((props: { children?: React.ReactNode; [key: string]: any }) => React.ReactElement)
 }
+```
+
+#### `TranslateFunction<T>`
+Type definition for the type-safe translation function.
+
+```typescript
+type TranslateFunction<T extends NestedRecord>
+```
+
+#### `UseTranslationReturn<T>`
+Return type of the `useTranslation` hook.
+
+```typescript
+interface UseTranslationReturn<T extends NestedRecord> {
+  t: TranslateFunction<T>;
+}
+```
+
+#### `NestedRecord`
+Base type for translation resources, allowing recursive nesting of primitive values.
+
+```typescript
+type NestedRecord = { 
+  [key: string]: string | number | boolean | null | undefined | NestedRecord 
+};
 ```
 
 
