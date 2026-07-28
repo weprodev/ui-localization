@@ -41,10 +41,12 @@ const en = {
     login: "Login",
     signup: "Sign Up",
     forgotPassword: "Forgot Password",
-    welcomeMessage: "Welcome <strong>{{name}}</strong>! Please <link>sign in</link> to continue."
+    welcomeMessage: "Welcome <strong>{{name}}</strong>! Please sign in to continue."
   },
   dashboard: {
     title: "Dashboard",
+    heading: "<highlight>Dashboard</highlight> <bold>Overview</bold>",
+    itemCount: "<count>{{count}}</count> of {{total}} items",
     summary: "Summary",
     recentActivity: "Recent Activity"
   }
@@ -66,10 +68,12 @@ const es = {
     login: "Iniciar sesión",
     signup: "Registrarse",
     forgotPassword: "Contraseña olvidada",
-    welcomeMessage: "Bienvenido <strong>{{name}}</strong>! Por favor <link>inicia sesión</link> para continuar."
+    welcomeMessage: "Bienvenido <strong>{{name}}</strong>! Por favor inicia sesión para continuar."
   },
   dashboard: {
     title: "Panel de control",
+    heading: "<highlight>Panel</highlight> <bold>General</bold>",
+    itemCount: "<count>{{count}}</count> de {{total}} elementos",
     summary: "Resumen",
     recentActivity: "Actividad reciente"
   }
@@ -442,38 +446,64 @@ const Greeting: React.FC<{ name: string }> = ({ name }) => {
 
 The unified `t` function supports both string and component interpolation. When you pass a `components` object as the third argument, it returns a React element instead of a string.
 
+Define custom tags in the translation string and wrap the text that should be rendered by those components. Pass **React elements** (not function components) in the components map — tag keys must match, and each element should include a stable `key`.
+
 ```typescript
 import { useTranslation } from '@weprodev/ui-localization';
 import en from '../translations/en';
 
+const Heading: React.FC = () => {
+  const { t } = useTranslation<typeof en>();
+
+  // Translation: "dashboard.heading": "<highlight>Dashboard</highlight> <bold>Overview</bold>"
+  // No {{vars}} → pass undefined as the second argument
+  return (
+    <h1>
+      {t('dashboard.heading', undefined, {
+        highlight: <span className="highlight" key="highlight" />,
+        bold: <span className="bold" key="bold" />,
+      })}
+    </h1>
+  );
+};
+
+const ItemCount: React.FC<{ count: number; total: number }> = ({ count, total }) => {
+  const { t } = useTranslation<typeof en>();
+
+  // Translation: "<count>{{count}}</count> of {{total}} items"
+  // Variables and components can be combined in the same call
+  return (
+    <p>
+      {t(
+        'dashboard.itemCount',
+        { count, total },
+        {
+          count: <strong key="count" />,
+        }
+      )}
+    </p>
+  );
+};
+
 const WelcomeMessage: React.FC<{ name: string }> = ({ name }) => {
   const { t } = useTranslation<typeof en>();
-  
-  // Translation: "auth.welcomeMessage": "Welcome <strong>{{name}}</strong>! Please <link>sign in</link> to continue."
-  // The translation string must contain matching HTML-like tags (<strong>, <link>, etc.)
-  const welcomeElement = t(
-    'auth.welcomeMessage',
-    { name },
-    {
-      strong: <strong className="highlight" />,
-      link: (props: { children?: React.ReactNode }) => (
-        <a href="#login" className="link-button">
-          {props.children}
-        </a>
-      )
-    }
+
+  // Translation: "Welcome <strong>{{name}}</strong>! Please sign in to continue."
+  return (
+    <div>
+      {t('auth.welcomeMessage', { name }, {
+        strong: <strong className="highlight" key="strong" />,
+      })}
+    </div>
   );
-  
-  // Returns JSX.Element when components are provided
-  return <div>{welcomeElement}</div>;
 };
 ```
 
 **Important Notes:**
-- Component interpolation only works when the translation string contains matching HTML-like tags (e.g., `<strong>`, `<link>`)
-- The component keys in your `components` object must match the tag names in the translation
-- For self-closing tags like `<strong />`, use self-closing components
-- For tags with content like `<link>text</link>`, use function components that accept `props.children`
+- Tag names in the translation string must match the keys in your `components` object (e.g. `<highlight>…</highlight>` ↔ `highlight: …`)
+- Text between tags comes from the translation file; components only supply the wrapper/styling
+- Pass React elements (with a `key`), not render functions / `props.children` handlers
+- When there are no `{{variables}}`, pass `undefined` as the second argument
 
 
 ### Usage Outside React Components
@@ -494,9 +524,10 @@ const greeting = t('common.hello');
 const message = t('common.welcome', { name: 'World' });
 
 // With components - Returns JSX.Element
-// Useful for creating localized constants with React elements
-const content = t('common.info', undefined, {
-  link: <a href="/more">More</a>
+// Text between tags comes from the translation; pass React elements with keys
+const content = t('dashboard.heading', undefined, {
+  highlight: <span className="highlight" key="highlight" />,
+  bold: <span className="bold" key="bold" />,
 });
 ```
 
@@ -604,14 +635,17 @@ const greeting = t('common.greeting'); // ❌ TypeScript error: missing required
 
 2. **Component interpolation** (returns `JSX.Element`):
 ```typescript
-// Pass components as third argument
-const welcomeElement = t(
-  'auth.welcomeMessage',
-  { name: 'Alice' },
-  {
-    strong: <strong className="highlight" />,
-    link: (props) => <a href="#login">{props.children}</a>
-  }
+// Components only — no {{vars}}, so second arg is undefined
+const heading = t('dashboard.heading', undefined, {
+  highlight: <span className="highlight" key="highlight" />,
+  bold: <span className="bold" key="bold" />,
+}); // ✅ Returns JSX.Element
+
+// Variables + components in the same call
+const itemCount = t(
+  'dashboard.itemCount',
+  { count: 3, total: 10 },
+  { count: <strong key="count" /> }
 ); // ✅ Returns JSX.Element
 ```
 
@@ -698,7 +732,7 @@ interface LocalizationConfig {
 ```
 
 #### `ComponentMap`
-Type for component interpolation map. Supports both React elements and function components.
+Type for component interpolation map. Prefer React elements with a stable `key` (as shown in the examples above). The type also allows function components for react-i18next `Trans` compatibility, but app usage should pass elements.
 
 ```typescript
 type ComponentMap = {
