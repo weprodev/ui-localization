@@ -225,6 +225,8 @@ Same structure as React applications (see above).
 
 #### 2. Create Localization Configuration
 
+`LanguageStore` is **synchronous** (`getLanguage(): string | null`, `setLanguage(language: string): void`). The language detector does not `await` promises. For AsyncStorage, hydrate into memory **before** `initLocalization`, then keep store reads/writes sync.
+
 ```typescript
 // src/localizationConfig.ts
 import { LocalizationConfig, LanguageStore } from '@weprodev/ui-localization';
@@ -232,24 +234,33 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import en from '../translations/en';
 import es from '../translations/es';
 
-// React Native language store using AsyncStorage
+const STORAGE_KEY = 'app-language';
+
 class ReactNativeLanguageStore implements LanguageStore {
-  async getLanguage(): Promise<string | null> {
+  private language: string | null = null;
+
+  /** Load persisted language before calling initLocalization. */
+  async hydrate(): Promise<void> {
     try {
-      return await AsyncStorage.getItem("app-language");
+      this.language = await AsyncStorage.getItem(STORAGE_KEY);
     } catch {
-      return null;
+      this.language = null;
     }
   }
 
-  async setLanguage(language: string): Promise<void> {
-    try {
-      await AsyncStorage.setItem("app-language", language);
-    } catch {
+  getLanguage(): string | null {
+    return this.language;
+  }
+
+  setLanguage(language: string): void {
+    this.language = language;
+    void AsyncStorage.setItem(STORAGE_KEY, language).catch(() => {
       // Handle storage error silently
-    }
+    });
   }
 }
+
+export const languageStore = new ReactNativeLanguageStore();
 
 export const localizationConfig: LocalizationConfig = {
   resources: {
@@ -257,7 +268,7 @@ export const localizationConfig: LocalizationConfig = {
     es: { translation: es }
   },
   fallbackLng: 'en',
-  languageStore: new ReactNativeLanguageStore()
+  languageStore
 };
 ```
 
@@ -268,15 +279,18 @@ export const localizationConfig: LocalizationConfig = {
 import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { initLocalization } from '@weprodev/ui-localization';
-import { localizationConfig } from './localizationConfig';
+import { languageStore, localizationConfig } from './localizationConfig';
 
 const App: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    initLocalization(localizationConfig).then(() => {
-      setIsInitialized(true);
-    });
+    languageStore
+      .hydrate()
+      .then(() => initLocalization(localizationConfig))
+      .then(() => {
+        setIsInitialized(true);
+      });
   }, []);
 
   if (!isInitialized) {
